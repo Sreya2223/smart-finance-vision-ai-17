@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
@@ -164,7 +163,11 @@ const Dashboard: React.FC = () => {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={expenseData}
+              data={[...expenseData.map(item => ({
+                month: item.month,
+                expense: item.amount,
+                income: incomeData.find(inc => inc.month === item.month)?.amount || 0
+              }))]}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -174,8 +177,8 @@ const Dashboard: React.FC = () => {
                 formatter={(value) => [`${currency}${value}`, 'Amount']}
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
               />
-              <Bar dataKey="amount" name="Expenses" fill="#F97066" />
-              <Bar dataKey="amount" name="Income" fill="#4A9F7E" data={incomeData} />
+              <Bar dataKey="expense" name="Expenses" fill="#F97066" />
+              <Bar dataKey="income" name="Income" fill="#4A9F7E" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
