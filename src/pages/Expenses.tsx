@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,10 @@ type ExpenseItem = {
 
 const Expenses: React.FC = () => {
   const { toast } = useToast();
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem('selectedCurrency') || '$';
+  });
+  
   const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
     { id: '1', title: 'Grocery Shopping', amount: 78.95, category: 'Food & Drinks', date: '2025-04-08', paymentMethod: 'Credit Card' },
     { id: '2', title: 'Netflix Subscription', amount: 15.99, category: 'Entertainment', date: '2025-04-03', paymentMethod: 'Credit Card' },
@@ -44,6 +48,21 @@ const Expenses: React.FC = () => {
   });
   
   const [isAdding, setIsAdding] = useState(false);
+  
+  useEffect(() => {
+    // Listen for currency changes
+    const handleCurrencyChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setSelectedCurrency(e.newValue || '$');
+      }
+    };
+    
+    window.addEventListener('storage', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleCurrencyChange);
+    };
+  }, []);
   
   const handleDelete = (id: string) => {
     setExpenseItems(prev => prev.filter(item => item.id !== id));
@@ -166,7 +185,7 @@ const Expenses: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">Amount ({selectedCurrency})</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-500">
                       <DollarSign className="h-4 w-4" />
@@ -277,7 +296,7 @@ const Expenses: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold text-red-600">-${item.amount.toFixed(2)}</span>
+                <span className="text-lg font-semibold text-red-600">-{selectedCurrency}{item.amount.toFixed(2)}</span>
                 <Button 
                   variant="ghost" 
                   size="icon" 

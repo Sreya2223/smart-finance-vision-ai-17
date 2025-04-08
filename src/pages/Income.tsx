@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,10 @@ type IncomeItem = {
 
 const Income: React.FC = () => {
   const { toast } = useToast();
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem('selectedCurrency') || '$';
+  });
+  
   const [incomeItems, setIncomeItems] = useState<IncomeItem[]>([
     { id: '1', title: 'Salary', amount: 3000, category: 'Employment', date: '2025-04-05' },
     { id: '2', title: 'Freelance Work', amount: 500, category: 'Business', date: '2025-04-10' },
@@ -39,6 +43,21 @@ const Income: React.FC = () => {
   });
   
   const [isAdding, setIsAdding] = useState(false);
+  
+  useEffect(() => {
+    // Listen for currency changes
+    const handleCurrencyChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setSelectedCurrency(e.newValue || '$');
+      }
+    };
+    
+    window.addEventListener('storage', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleCurrencyChange);
+    };
+  }, []);
   
   const handleDelete = (id: string) => {
     setIncomeItems(prev => prev.filter(item => item.id !== id));
@@ -140,7 +159,7 @@ const Income: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">Amount ({selectedCurrency})</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-500">
                       <DollarSign className="h-4 w-4" />
@@ -210,7 +229,7 @@ const Income: React.FC = () => {
                 <p className="text-sm text-gray-500">{item.category} • {item.date}</p>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold text-green-600">${item.amount.toFixed(2)}</span>
+                <span className="text-lg font-semibold text-green-600">{selectedCurrency}{item.amount.toFixed(2)}</span>
                 <Button 
                   variant="ghost" 
                   size="icon" 

@@ -1,12 +1,14 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 type LogoProps = {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  className?: string;
 };
 
-const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
+const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className }) => {
   const dimensions = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
@@ -20,7 +22,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", className)}>
       <div className="relative">
         <div className={`${dimensions[size]} relative`}>
           <div className="absolute top-0 w-full aspect-square bg-secondary rounded-full flex items-center justify-center border-2 border-dark">

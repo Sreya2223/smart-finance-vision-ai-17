@@ -1,88 +1,71 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import Logo from '../common/Logo';
+import { NavLink } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  Wallet, 
+  Home, 
   CreditCard, 
+  DollarSign, 
+  PieChart, 
   BarChart3, 
-  Receipt, 
-  Settings, 
-  LogOut,
-  Goal,
-  ScanText
+  Camera, 
+  Settings,
+  LogOut
 } from 'lucide-react';
-import { Button } from '../ui/button';
+import Logo from '@/components/common/Logo';
 import { cn } from '@/lib/utils';
-
-type NavItemProps = {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
-};
-
-const NavItem: React.FC<NavItemProps> = ({ to, icon, label, active }) => {
-  return (
-    <Link to={to}>
-      <Button 
-        variant="ghost" 
-        className={cn(
-          "w-full justify-start gap-2 font-medium", 
-          active ? "bg-primary/10 text-primary" : "text-gray-700 hover:text-primary"
-        )}
-      >
-        {icon}
-        {label}
-      </Button>
-    </Link>
-  );
-};
+import { useAuth } from '@/App';
 
 const DashboardSidebar: React.FC = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
+  const { logout } = useAuth();
+  
   const navItems = [
-    { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { to: '/income', icon: <Wallet size={20} />, label: 'Income' },
-    { to: '/expenses', icon: <CreditCard size={20} />, label: 'Expenses' },
-    { to: '/budget', icon: <Goal size={20} />, label: 'Budget' },
-    { to: '/reports', icon: <BarChart3 size={20} />, label: 'Reports' },
-    { to: '/transactions', icon: <Receipt size={20} />, label: 'Transactions' },
-    { to: '/scan-receipt', icon: <ScanText size={20} />, label: 'Scan Receipt' },
-    { to: '/settings', icon: <Settings size={20} />, label: 'Settings' },
+    { label: 'Dashboard', icon: Home, to: '/dashboard' },
+    { label: 'Income', icon: DollarSign, to: '/income' },
+    { label: 'Expenses', icon: CreditCard, to: '/expenses' },
+    { label: 'Budget', icon: PieChart, to: '/budget' },
+    { label: 'Reports', icon: BarChart3, to: '/reports' },
+    { label: 'Scan Receipt', icon: Camera, to: '/scan-receipt' },
+    { label: 'Settings', icon: Settings, to: '/settings' },
   ];
-
+  
   return (
-    <div className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col p-4">
-      <div className="py-4 px-2">
-        <Logo />
+    <aside className="w-16 md:w-56 h-full bg-white border-r border-gray-200 flex flex-col">
+      <div className="p-4 flex justify-center md:justify-start">
+        <Logo size="md" showText={false} className="md:hidden" />
+        <Logo size="md" showText={true} className="hidden md:block" />
       </div>
       
-      <nav className="mt-8 flex-1 space-y-1">
-        {navItems.map(item => (
-          <NavItem 
-            key={item.to} 
-            to={item.to} 
-            icon={item.icon} 
-            label={item.label}
-            active={currentPath === item.to}
-          />
-        ))}
+      <nav className="flex-1 px-2 py-4">
+        <ul className="space-y-1">
+          {navItems.map((item) => (
+            <li key={item.label}>
+              <NavLink
+                to={item.to}
+                className={({ isActive }) => cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive 
+                    ? "bg-primary text-white" 
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="hidden md:inline">{item.label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
       
-      <div className="pt-4 border-t border-gray-200">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start gap-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+      <div className="p-3 border-t border-gray-200">
+        <button 
+          onClick={logout}
+          className="flex items-center space-x-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
         >
-          <LogOut size={20} />
-          Logout
-        </Button>
+          <LogOut className="h-5 w-5" />
+          <span className="hidden md:inline">Logout</span>
+        </button>
       </div>
-    </div>
+    </aside>
   );
 };
 

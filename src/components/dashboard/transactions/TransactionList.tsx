@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import {
   Card,
@@ -27,9 +27,33 @@ type TransactionListProps = {
 
 const TransactionList: React.FC<TransactionListProps> = ({ 
   transactions, 
-  currency = '$',
+  currency: propCurrency,
   onAddTransaction 
 }) => {
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return propCurrency || localStorage.getItem('selectedCurrency') || '$';
+  });
+  
+  useEffect(() => {
+    // Update currency when localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setSelectedCurrency(e.newValue || '$');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // If prop currency changes, update the state
+    if (propCurrency) {
+      setSelectedCurrency(propCurrency);
+    }
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [propCurrency]);
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -76,7 +100,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <p className={`font-medium ${
                     transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'}{currency}{transaction.amount.toFixed(2)}
+                    {transaction.type === 'income' ? '+' : '-'}{selectedCurrency}{transaction.amount.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-500">{transaction.date}</p>
                 </div>
