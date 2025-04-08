@@ -38,7 +38,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
     { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: '🇨🇳' },
   ]);
 
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(() => {
+    const savedCurrency = localStorage.getItem('selectedCurrencyCode');
+    return savedCurrency 
+      ? currencies.find(c => c.code === savedCurrency) || currencies[0]
+      : currencies[0];
+  });
+  
   const [notifications, setNotifications] = useState([
     { id: 1, title: 'Budget Alert', message: 'You are close to your monthly Entertainment budget limit.', date: '2025-04-08', read: false },
     { id: 2, title: 'New Feature', message: 'Try our new AI Receipt Scanner to track expenses faster!', date: '2025-04-07', read: false },
@@ -47,6 +53,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
 
   const handleCurrencyChange = (currency: Currency) => {
     setSelectedCurrency(currency);
+    // Save both code and symbol for easy access
+    localStorage.setItem('selectedCurrencyCode', currency.code);
+    localStorage.setItem('selectedCurrency', currency.symbol);
+    
+    // Trigger an event so other components can listen for changes
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'selectedCurrency',
+      newValue: currency.symbol
+    }));
+    
     toast({
       title: "Currency Changed",
       description: `Your currency has been changed to ${currency.name}`,

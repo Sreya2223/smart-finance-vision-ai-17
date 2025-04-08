@@ -1,38 +1,68 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
 import ChartCard from '@/components/dashboard/charts/ChartCard';
 import TransactionList from '@/components/dashboard/transactions/TransactionList';
+import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 import BudgetProgressCard from '@/components/dashboard/budget/BudgetProgressCard';
 import { Wallet, CreditCard, DollarSign, Utensils, ShoppingBag, Home, Train, Gift } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
+type Transaction = {
+  id: string;
+  type: 'income' | 'expense';
+  title: string;
+  category: string;
+  amount: number;
+  date: string;
+};
+
 const Dashboard: React.FC = () => {
+  // Get the currency from DashboardHeader or localStorage
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    return localStorage.getItem('selectedCurrency') || '$';
+  });
+  
+  useEffect(() => {
+    // Listen for currency changes from the header
+    const handleCurrencyChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setSelectedCurrency(e.newValue || '$');
+      }
+    };
+    
+    window.addEventListener('storage', handleCurrencyChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleCurrencyChange);
+    };
+  }, []);
+  
   // Mock data for testing
-  const [currency, setCurrency] = useState('$');
+  const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   
   const expenseData = [
-    { month: 'Jan', amount: 1200 },
-    { month: 'Feb', amount: 1900 },
-    { month: 'Mar', amount: 1500 },
-    { month: 'Apr', amount: 1800 },
-    { month: 'May', amount: 1300 },
-    { month: 'Jun', amount: 1700 },
+    { name: 'Jan', expense: 1200 },
+    { name: 'Feb', expense: 1900 },
+    { name: 'Mar', expense: 1500 },
+    { name: 'Apr', expense: 1800 },
+    { name: 'May', expense: 1300 },
+    { name: 'Jun', expense: 1700 },
   ];
   
   const incomeData = [
-    { month: 'Jan', amount: 2500 },
-    { month: 'Feb', amount: 2500 },
-    { month: 'Mar', amount: 2700 },
-    { month: 'Apr', amount: 2600 },
-    { month: 'May', amount: 2800 },
-    { month: 'Jun', amount: 3000 },
+    { name: 'Jan', income: 2500 },
+    { name: 'Feb', income: 2500 },
+    { name: 'Mar', income: 2700 },
+    { name: 'Apr', income: 2600 },
+    { name: 'May', income: 2800 },
+    { name: 'Jun', income: 3000 },
   ];
   
   const balanceData = incomeData.map((item, index) => ({
-    month: item.month,
-    amount: item.amount - expenseData[index].amount
+    name: item.name,
+    balance: item.income - expenseData[index].expense
   }));
   
   const expenseByCategory = [
@@ -44,17 +74,17 @@ const Dashboard: React.FC = () => {
     { name: 'Others', value: 100, color: '#264653' },
   ];
 
-  // Transform data for bar chart to include both income and expense
-  const combinedChartData = expenseData.map(item => ({
-    month: item.month,
-    expense: item.amount,
-    income: incomeData.find(inc => inc.month === item.month)?.amount || 0
+  // Combine income and expense data
+  const combinedChartData = expenseData.map((item, index) => ({
+    name: item.name,
+    expense: item.expense,
+    income: incomeData[index].income
   }));
   
-  const recentTransactions = [
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([
     {
       id: '1',
-      type: 'expense' as const,
+      type: 'expense',
       title: 'Grocery Shopping',
       category: 'Food & Drinks',
       amount: 78.95,
@@ -62,7 +92,7 @@ const Dashboard: React.FC = () => {
     },
     {
       id: '2',
-      type: 'income' as const,
+      type: 'income',
       title: 'Salary Deposit',
       category: 'Salary',
       amount: 3000.00,
@@ -70,7 +100,7 @@ const Dashboard: React.FC = () => {
     },
     {
       id: '3',
-      type: 'expense' as const,
+      type: 'expense',
       title: 'Netflix Subscription',
       category: 'Entertainment',
       amount: 15.99,
@@ -78,7 +108,7 @@ const Dashboard: React.FC = () => {
     },
     {
       id: '4',
-      type: 'expense' as const,
+      type: 'expense',
       title: 'Uber Ride',
       category: 'Transportation',
       amount: 24.50,
@@ -86,13 +116,17 @@ const Dashboard: React.FC = () => {
     },
     {
       id: '5',
-      type: 'income' as const,
+      type: 'income',
       title: 'Freelance Payment',
       category: 'Freelance',
       amount: 350.00,
       date: '2025-04-01',
     },
-  ];
+  ]);
+  
+  const handleAddTransaction = (newTransaction: Transaction) => {
+    setRecentTransactions(prev => [newTransaction, ...prev]);
+  };
   
   const budgetCategories = [
     {
@@ -142,13 +176,13 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <StatsCard
           title="Total Balance"
-          value={`${currency}7,815.00`}
+          value={`${selectedCurrency}7,815.00`}
           icon={<DollarSign className="h-5 w-5 text-primary" />}
           iconBg="bg-primary/10"
         />
         <StatsCard
           title="Total Income"
-          value={`${currency}12,500.00`}
+          value={`${selectedCurrency}12,500.00`}
           change={8}
           icon={<Wallet className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
@@ -156,7 +190,7 @@ const Dashboard: React.FC = () => {
         />
         <StatsCard
           title="Total Expenses"
-          value={`${currency}4,685.00`}
+          value={`${selectedCurrency}4,685.00`}
           change={-2}
           icon={<CreditCard className="h-5 w-5 text-red-600" />}
           iconBg="bg-red-100"
@@ -175,10 +209,10 @@ const Dashboard: React.FC = () => {
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip 
-                formatter={(value) => [`${currency}${value}`, 'Amount']}
+                formatter={(value) => [`${selectedCurrency}${value}`, 'Amount']}
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
               />
               <Bar dataKey="expense" name="Expenses" fill="#F97066" />
@@ -209,7 +243,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value) => [`${currency}${value}`, 'Amount']}
+                formatter={(value) => [`${selectedCurrency}${value}`, 'Amount']}
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
               />
             </PieChart>
@@ -218,9 +252,21 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TransactionList transactions={recentTransactions} currency={currency} />
-        <BudgetProgressCard categories={budgetCategories} currency={currency} month="April 2025" />
+        <TransactionList 
+          transactions={recentTransactions.slice(0, 5)} 
+          currency={selectedCurrency} 
+          onAddTransaction={() => setIsAddingTransaction(true)}
+        />
+        <BudgetProgressCard categories={budgetCategories} currency={selectedCurrency} month="April 2025" />
       </div>
+      
+      {/* Transaction input dialog */}
+      <AddTransactionForm 
+        isOpen={isAddingTransaction}
+        onClose={() => setIsAddingTransaction(false)}
+        onAddTransaction={handleAddTransaction}
+        currency={selectedCurrency}
+      />
     </DashboardLayout>
   );
 };

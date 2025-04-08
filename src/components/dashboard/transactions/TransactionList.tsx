@@ -21,10 +21,15 @@ type Transaction = {
 
 type TransactionListProps = {
   transactions: Transaction[];
-  currency: string;
+  currency?: string;
+  onAddTransaction?: () => void;
 };
 
-const TransactionList: React.FC<TransactionListProps> = ({ transactions, currency = '$' }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ 
+  transactions, 
+  currency = '$',
+  onAddTransaction 
+}) => {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -32,43 +37,56 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, currenc
           <CardTitle className="text-lg">Recent Transactions</CardTitle>
           <CardDescription>Your latest financial activities</CardDescription>
         </div>
-        <Button variant="ghost" size="sm" className="gap-1">
-          <span>View all</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          {onAddTransaction && (
+            <Button variant="outline" size="sm" className="gap-1" onClick={onAddTransaction}>
+              <span>Add</span>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" className="gap-1">
+            <span>View all</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {transactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-md transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-full ${
-                  transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                }`}>
-                  {transaction.type === 'income' ? (
-                    <ArrowUpRight className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <ArrowDownLeft className="h-4 w-4 text-red-600" />
-                  )}
+          {transactions.length > 0 ? (
+            transactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-full ${
+                    transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                  }`}>
+                    {transaction.type === 'income' ? (
+                      <ArrowUpRight className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ArrowDownLeft className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">{transaction.title}</h4>
+                    <p className="text-sm text-gray-500">{transaction.category}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">{transaction.title}</h4>
-                  <p className="text-sm text-gray-500">{transaction.category}</p>
+                <div className="text-right">
+                  <p className={`font-medium ${
+                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {transaction.type === 'income' ? '+' : '-'}{currency}{transaction.amount.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500">{transaction.date}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className={`font-medium ${
-                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {transaction.type === 'income' ? '+' : '-'}{currency}{transaction.amount.toFixed(2)}
-                </p>
-                <p className="text-sm text-gray-500">{transaction.date}</p>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              No transactions to display
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>
