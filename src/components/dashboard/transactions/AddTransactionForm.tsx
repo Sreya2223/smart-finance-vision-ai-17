@@ -109,22 +109,22 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Transaction</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-white to-slate-50 border-slate-200 shadow-lg">
+        <DialogHeader className="bg-gradient-to-r from-indigo-50 to-slate-50 -mx-6 px-6 py-2 rounded-t-lg">
+          <DialogTitle className="text-slate-800">Add New Transaction</DialogTitle>
+          <DialogDescription className="text-slate-600">
             Enter the details of your transaction below
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label htmlFor="transaction-type">Transaction Type</Label>
+            <Label htmlFor="transaction-type" className="text-slate-700">Transaction Type</Label>
             <Select 
               value={formData.type}
               onValueChange={(value: 'income' | 'expense') => setFormData({...formData, type: value, category: ''})}
             >
-              <SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -135,26 +135,27 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title" className="text-slate-700">Title</Label>
             <Input 
               id="title" 
               placeholder="Transaction title" 
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
+              className="border-slate-300 bg-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ({currency})</Label>
+            <Label htmlFor="amount" className="text-slate-700">Amount (₹)</Label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500">
-                <DollarSign className="h-4 w-4" />
+              <span className="absolute left-3 top-2.5 text-slate-500">
+                ₹
               </span>
               <Input 
                 id="amount" 
                 type="number" 
                 placeholder="0.00" 
-                className="pl-9"
+                className="pl-9 border-slate-300 bg-white"
                 value={formData.amount}
                 onChange={e => setFormData({...formData, amount: e.target.value})}
               />
@@ -162,12 +163,12 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category" className="text-slate-700">Category</Label>
             <Select 
               value={formData.category}
               onValueChange={value => setFormData({...formData, category: value})}
             >
-              <SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -179,20 +180,21 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date" className="text-slate-700">Date</Label>
             <Input 
               id="date" 
               type="date" 
               value={formData.date}
               onChange={e => setFormData({...formData, date: e.target.value})}
+              className="border-slate-300 bg-white"
             />
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="border-slate-300 hover:bg-slate-100">
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
               Add Transaction
             </Button>
           </DialogFooter>

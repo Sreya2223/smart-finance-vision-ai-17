@@ -50,6 +50,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
     }
+    
+    // Set default currency to INR
+    if (!localStorage.getItem('selectedCurrency')) {
+      localStorage.setItem('selectedCurrency', '₹');
+    }
   }, []);
 
   // Login function

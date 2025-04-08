@@ -29,7 +29,7 @@ const DashboardSidebar: React.FC = () => {
   ];
   
   return (
-    <aside className="w-16 md:w-56 h-full bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-16 md:w-56 h-full bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 flex flex-col shadow-lg">
       <div className="p-4 flex justify-center md:justify-start">
         <Logo size="md" showText={false} className="md:hidden" />
         <Logo size="md" showText={true} className="hidden md:block" />
@@ -44,8 +44,8 @@ const DashboardSidebar: React.FC = () => {
                 className={({ isActive }) => cn(
                   "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   isActive 
-                    ? "bg-primary text-white" 
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-indigo-600 text-white shadow-md" 
+                    : "text-slate-300 hover:bg-slate-700/50"
                 )}
               >
                 <item.icon className="h-5 w-5" />
@@ -56,10 +56,10 @@ const DashboardSidebar: React.FC = () => {
         </ul>
       </nav>
       
-      <div className="p-3 border-t border-gray-200">
+      <div className="p-3 border-t border-slate-700">
         <button 
           onClick={logout}
-          className="flex items-center space-x-2 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          className="flex items-center space-x-2 w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-slate-700/50 rounded-md transition-colors"
         >
           <LogOut className="h-5 w-5" />
           <span className="hidden md:inline">Logout</span>

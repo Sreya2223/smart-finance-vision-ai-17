@@ -26,7 +26,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className }) 
       <div className="relative">
         <div className={`${dimensions[size]} relative`}>
           <div className="absolute top-0 w-full aspect-square bg-secondary rounded-full flex items-center justify-center border-2 border-dark">
-            <span className="text-dark font-bold text-xl">$</span>
+            <span className="text-dark font-bold text-xl">₹</span>
           </div>
           <div className="absolute top-1/2 w-full aspect-[1/1.2] bg-primary rounded-b-lg border-2 border-dark flex items-center justify-center">
             <div className="w-4/5 h-0.5 bg-dark opacity-70 absolute top-1/4 rounded-full"></div>

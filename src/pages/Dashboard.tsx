@@ -21,14 +21,20 @@ type Transaction = {
 const Dashboard: React.FC = () => {
   // Get the currency from DashboardHeader or localStorage
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('selectedCurrency') || '$';
+    return localStorage.getItem('selectedCurrency') || '₹';
   });
   
   useEffect(() => {
+    // Set default currency to INR if not present
+    if (!localStorage.getItem('selectedCurrency')) {
+      localStorage.setItem('selectedCurrency', '₹');
+      setSelectedCurrency('₹');
+    }
+    
     // Listen for currency changes from the header
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
-        setSelectedCurrency(e.newValue || '$');
+        setSelectedCurrency(e.newValue || '₹');
       }
     };
     
@@ -134,51 +140,51 @@ const Dashboard: React.FC = () => {
       name: 'Food & Dining',
       budgeted: 600,
       spent: 480,
-      icon: <Utensils className="h-4 w-4 text-primary" />,
+      icon: <Utensils className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '2',
       name: 'Shopping',
       budgeted: 400,
       spent: 320,
-      icon: <ShoppingBag className="h-4 w-4 text-primary" />,
+      icon: <ShoppingBag className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '3',
       name: 'Housing',
       budgeted: 1200,
       spent: 1200,
-      icon: <Home className="h-4 w-4 text-primary" />,
+      icon: <Home className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '4',
       name: 'Transportation',
       budgeted: 300,
       spent: 340,
-      icon: <Train className="h-4 w-4 text-primary" />,
+      icon: <Train className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '5',
       name: 'Entertainment',
       budgeted: 200,
       spent: 180,
-      icon: <Gift className="h-4 w-4 text-primary" />,
+      icon: <Gift className="h-4 w-4 text-indigo-600" />,
     },
   ];
 
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Welcome back! Here's an overview of your finances</p>
+        <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+        <p className="text-slate-600">Welcome back! Here's an overview of your finances</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <StatsCard
           title="Total Balance"
           value={`${selectedCurrency}7,815.00`}
-          icon={<DollarSign className="h-5 w-5 text-primary" />}
-          iconBg="bg-primary/10"
+          icon={<DollarSign className="h-5 w-5 text-indigo-600" />}
+          iconBg="bg-indigo-100"
         />
         <StatsCard
           title="Total Income"
@@ -213,7 +219,7 @@ const Dashboard: React.FC = () => {
               <YAxis />
               <Tooltip 
                 formatter={(value) => [`${selectedCurrency}${value}`, 'Amount']}
-                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />
               <Bar dataKey="expense" name="Expenses" fill="#F97066" />
               <Bar dataKey="income" name="Income" fill="#4A9F7E" />
@@ -244,7 +250,7 @@ const Dashboard: React.FC = () => {
               </Pie>
               <Tooltip 
                 formatter={(value) => [`${selectedCurrency}${value}`, 'Amount']}
-                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px' }}
+                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />
             </PieChart>
           </ResponsiveContainer>
