@@ -2,76 +2,130 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/App';
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+// Form validation schema
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the redirect path from location state or default to dashboard
+  const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Initialize form with validation
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    // Simulate login process for now
-    setTimeout(() => {
+    try {
+      await login(values.email, values.password);
+      
       toast({
         title: "Success!",
         description: "You have successfully logged in.",
       });
-      // In a real app, we would store the token and redirect
-      window.location.href = '/dashboard';
+      
+      // Navigate to the intended route or dashboard
+      navigate(from, { replace: true });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email
-        </label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email address"
-          required
-          className="w-full"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="Your email address"
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <div className="flex justify-between mb-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <a href="#" className="text-sm text-primary-600 hover:underline">
-            Forgot password?
-          </a>
+        
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex justify-between items-center">
+                <FormLabel>Password</FormLabel>
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="Your password"
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Log in'}
+        </Button>
+        
+        <div className="text-center mt-4">
+          <span className="text-gray-600">Don't have an account? </span>
+          <Link to="/signup" className="text-primary hover:underline">
+            Sign up
+          </Link>
         </div>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Your password"
-          required
-          className="w-full"
-        />
-      </div>
-      <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading}>
-        {isLoading ? 'Logging in...' : 'Log in'}
-      </Button>
-      <div className="text-center mt-4">
-        <span className="text-gray-600">Don't have an account? </span>
-        <Link to="/signup" className="text-primary-600 hover:underline">
-          Sign up
-        </Link>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
@@ -42,6 +43,13 @@ const Dashboard: React.FC = () => {
     { name: 'Shopping', value: 250, color: '#F4A261' },
     { name: 'Others', value: 100, color: '#264653' },
   ];
+
+  // Transform data for bar chart to include both income and expense
+  const combinedChartData = expenseData.map(item => ({
+    month: item.month,
+    expense: item.amount,
+    income: incomeData.find(inc => inc.month === item.month)?.amount || 0
+  }));
   
   const recentTransactions = [
     {
@@ -163,11 +171,7 @@ const Dashboard: React.FC = () => {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={[...expenseData.map(item => ({
-                month: item.month,
-                expense: item.amount,
-                income: incomeData.find(inc => inc.month === item.month)?.amount || 0
-              }))]}
+              data={combinedChartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
