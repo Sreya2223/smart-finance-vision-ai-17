@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ArrowUpRight, ArrowDownLeft, IndianRupee } from 'lucide-react';
+import { ChevronRight, ArrowUpRight, ArrowDownLeft, Loader2 } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -9,30 +9,59 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
-type Transaction = {
-  id: string;
-  type: 'income' | 'expense';
-  title: string;
-  category: string;
-  amount: number;
-  date: string;
-};
+import { getUserTransactions, Transaction } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type TransactionListProps = {
-  transactions: Transaction[];
+  transactions?: Transaction[];
   currency?: string;
   onAddTransaction?: () => void;
+  isLoading?: boolean;
 };
 
 const TransactionList: React.FC<TransactionListProps> = ({ 
-  transactions, 
+  transactions: propTransactions, 
   currency: propCurrency,
-  onAddTransaction 
+  onAddTransaction,
+  isLoading: propIsLoading = false
 }) => {
+  const { toast } = useToast();
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return propCurrency || localStorage.getItem('selectedCurrency') || '₹';
   });
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(propIsLoading);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Use transactions from props if provided, otherwise fetch from Supabase
+  useEffect(() => {
+    if (propTransactions) {
+      setTransactions(propTransactions);
+      return;
+    }
+    
+    const fetchTransactions = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getUserTransactions();
+        setTransactions(data);
+        setError(null);
+      } catch (err: any) {
+        console.error('Error fetching transactions:', err);
+        setError(err.message || 'Failed to load transactions');
+        toast({
+          title: "Error loading transactions",
+          description: err.message || 'Failed to load transactions',
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTransactions();
+  }, [propTransactions, toast]);
   
   useEffect(() => {
     // Update currency when localStorage changes
@@ -74,44 +103,54 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {transactions.length > 0 ? (
-            transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-md transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-full ${
-                    transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                  } transition-transform group-hover:scale-110 duration-200`}>
-                    {transaction.type === 'income' ? (
-                      <ArrowUpRight className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <ArrowDownLeft className="h-4 w-4 text-red-600" />
-                    )}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-6 text-red-500">
+            {error}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {transactions.length > 0 ? (
+              transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-md transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-full ${
+                      transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                    } transition-transform group-hover:scale-110 duration-200`}>
+                      {transaction.type === 'income' ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <ArrowDownLeft className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-800">{transaction.title}</h4>
+                      <p className="text-sm text-slate-500">{transaction.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-slate-800">{transaction.title}</h4>
-                    <p className="text-sm text-slate-500">{transaction.category}</p>
+                  <div className="text-right">
+                    <p className={`font-medium ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'income' ? '' : '- '}{selectedCurrency}{parseFloat(String(transaction.amount)).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-slate-500">{transaction.date}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-medium ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'income' ? '' : '- '}{selectedCurrency}{transaction.amount.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-slate-500">{transaction.date}</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 text-slate-500">
+                No transactions to display
               </div>
-            ))
-          ) : (
-            <div className="text-center py-6 text-slate-500">
-              No transactions to display
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

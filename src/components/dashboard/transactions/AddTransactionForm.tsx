@@ -12,18 +12,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { DollarSign } from 'lucide-react';
-
-type Transaction = {
-  id: string;
-  type: 'income' | 'expense';
-  title: string;
-  category: string;
-  amount: number;
-  date: string;
-};
+import { DollarSign, Loader2 } from 'lucide-react';
+import { addTransaction, Transaction } from '@/integrations/supabase/client';
 
 type AddTransactionFormProps = {
   isOpen: boolean;
@@ -39,12 +30,14 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
   currency
 }) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     amount: '',
     category: '',
     type: 'expense' as 'income' | 'expense',
     date: new Date().toISOString().slice(0, 10),
+    payment_method: '',
   });
 
   const expenseCategories = [
@@ -68,7 +61,7 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
     'Other'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title || !formData.amount || !formData.category) {
@@ -80,31 +73,49 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
       return;
     }
 
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      type: formData.type,
-      title: formData.title,
-      category: formData.category,
-      amount: parseFloat(formData.amount),
-      date: formData.date,
-    };
-
-    onAddTransaction(newTransaction);
+    setIsSubmitting(true);
     
-    toast({
-      title: "Success",
-      description: `${formData.type === 'income' ? 'Income' : 'Expense'} added successfully`,
-    });
-    
-    setFormData({
-      title: '',
-      amount: '',
-      category: '',
-      type: 'expense',
-      date: new Date().toISOString().slice(0, 10),
-    });
-    
-    onClose();
+    try {
+      const transactionData = {
+        type: formData.type,
+        title: formData.title,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        date: formData.date,
+        payment_method: formData.payment_method || undefined,
+      };
+      
+      // Save transaction to Supabase
+      const newTransaction = await addTransaction(transactionData);
+      
+      onAddTransaction(newTransaction);
+      
+      toast({
+        title: "Success",
+        description: `${formData.type === 'income' ? 'Income' : 'Expense'} added successfully`,
+      });
+      
+      // Reset form
+      setFormData({
+        title: '',
+        amount: '',
+        category: '',
+        type: 'expense',
+        date: new Date().toISOString().slice(0, 10),
+        payment_method: '',
+      });
+      
+      onClose();
+    } catch (error: any) {
+      console.error('Error adding transaction:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add transaction",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -123,6 +134,7 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             <Select 
               value={formData.type}
               onValueChange={(value: 'income' | 'expense') => setFormData({...formData, type: value, category: ''})}
+              disabled={isSubmitting}
             >
               <SelectTrigger className="border-slate-300 bg-white">
                 <SelectValue placeholder="Select type" />
@@ -142,14 +154,15 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
               className="border-slate-300 bg-white"
+              disabled={isSubmitting}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-slate-700">Amount (₹)</Label>
+            <Label htmlFor="amount" className="text-slate-700">Amount ({currency})</Label>
             <div className="relative">
               <span className="absolute left-3 top-2.5 text-slate-500">
-                ₹
+                {currency}
               </span>
               <Input 
                 id="amount" 
@@ -158,6 +171,7 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
                 className="pl-9 border-slate-300 bg-white"
                 value={formData.amount}
                 onChange={e => setFormData({...formData, amount: e.target.value})}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -167,6 +181,7 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
             <Select 
               value={formData.category}
               onValueChange={value => setFormData({...formData, category: value})}
+              disabled={isSubmitting}
             >
               <SelectTrigger className="border-slate-300 bg-white">
                 <SelectValue placeholder="Select category" />
@@ -187,15 +202,44 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
               value={formData.date}
               onChange={e => setFormData({...formData, date: e.target.value})}
               className="border-slate-300 bg-white"
+              disabled={isSubmitting}
             />
           </div>
           
+          <div className="space-y-2">
+            <Label htmlFor="payment_method" className="text-slate-700">Payment Method (Optional)</Label>
+            <Select 
+              value={formData.payment_method}
+              onValueChange={value => setFormData({...formData, payment_method: value})}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="border-slate-300 bg-white">
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Cash">Cash</SelectItem>
+                <SelectItem value="Credit Card">Credit Card</SelectItem>
+                <SelectItem value="Debit Card">Debit Card</SelectItem>
+                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                <SelectItem value="UPI">UPI</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} className="border-slate-300 hover:bg-slate-100">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="border-slate-300 hover:bg-slate-100">
               Cancel
             </Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
-              Add Transaction
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Add Transaction'
+              )}
             </Button>
           </DialogFooter>
         </form>
