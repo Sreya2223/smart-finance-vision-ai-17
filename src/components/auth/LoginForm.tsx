@@ -16,6 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from 'lucide-react';
 
 // Form validation schema
 const formSchema = z.object({
@@ -27,6 +29,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -46,6 +49,7 @@ const LoginForm: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       await login(values.email, values.password);
@@ -58,9 +62,16 @@ const LoginForm: React.FC = () => {
       // Navigate to the intended route or dashboard
       navigate(from, { replace: true });
     } catch (error: any) {
+      // Handle specific error cases
+      if (error.message.includes('email_not_confirmed')) {
+        setErrorMessage("Please check your email and follow the verification link to confirm your account.");
+      } else {
+        setErrorMessage(error.message || "Invalid email or password. Please try again.");
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Invalid email or password. Please try again.",
+        title: "Login failed",
+        description: "There was a problem logging in. Please check your credentials.",
         variant: "destructive",
       });
     } finally {
@@ -70,6 +81,14 @@ const LoginForm: React.FC = () => {
 
   return (
     <Form {...form}>
+      {errorMessage && (
+        <Alert className="mb-4 bg-destructive/15 border-destructive/30">
+          <AlertDescription className="text-destructive">
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
@@ -115,7 +134,12 @@ const LoginForm: React.FC = () => {
         />
         
         <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Log in'}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Logging in...
+            </>
+          ) : 'Log in'}
         </Button>
         
         <div className="text-center mt-4">
