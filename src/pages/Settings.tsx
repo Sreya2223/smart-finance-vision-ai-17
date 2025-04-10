@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,8 +35,19 @@ const Settings: React.FC = () => {
     avatar: user?.avatar || '',
   });
   
+  // Update profile data when user object changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || profileData.name,
+        email: user.email || profileData.email,
+        avatar: user.avatar || profileData.avatar,
+      });
+    }
+  }, [user]);
+  
   const [preferences, setPreferences] = useState({
-    currency: 'USD',
+    currency: localStorage.getItem('selectedCurrencyCode') || 'INR',
     theme: 'light',
     emailNotifications: true,
     appNotifications: true,
@@ -52,6 +63,21 @@ const Settings: React.FC = () => {
   };
   
   const handlePreferencesUpdate = () => {
+    // Update saved currency preference
+    if (preferences.currency) {
+      const currencyObj = currencies.find(c => c.code === preferences.currency);
+      if (currencyObj) {
+        localStorage.setItem('selectedCurrencyCode', currencyObj.code);
+        localStorage.setItem('selectedCurrency', currencyObj.symbol);
+        
+        // Trigger an event so other components can listen for changes
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'selectedCurrency',
+          newValue: currencyObj.symbol
+        }));
+      }
+    }
+    
     toast({
       title: "Preferences updated",
       description: "Your preferences have been saved.",

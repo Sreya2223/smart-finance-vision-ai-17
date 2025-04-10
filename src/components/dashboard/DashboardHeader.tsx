@@ -13,6 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/App';
 
 type Currency = {
   code: string;
@@ -27,6 +29,9 @@ type DashboardHeaderProps = {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
   const { toast } = useToast();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
   const [currencies, setCurrencies] = useState<Currency[]>([
     { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
     { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
@@ -77,6 +82,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
           : notification
       )
     );
+  };
+
+  const handleProfileClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -161,17 +170,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="cursor-pointer">
-              <AvatarImage src="" />
-              <AvatarFallback className="bg-primary text-white">JP</AvatarFallback>
+              <AvatarImage src={user?.avatar || ""} />
+              <AvatarFallback className="bg-primary text-white">
+                {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'JP'}
+              </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleProfileClick}>Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="text-red-600">Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
