@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { ChevronRight, ArrowUpRight, ArrowDownLeft, IndianRupee } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -100,7 +100,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <p className={`font-medium ${
                     transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'}{selectedCurrency}{transaction.amount.toFixed(2)}
+                    {transaction.type === 'income' ? '' : '- '}{selectedCurrency}{transaction.amount.toFixed(2)}
                   </p>
                   <p className="text-sm text-slate-500">{transaction.date}</p>
                 </div>
