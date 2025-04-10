@@ -21,6 +21,11 @@ const Settings: React.FC = () => {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   
+  // Get user information from metadata
+  const userEmail = user?.email || '';
+  const userName = user?.user_metadata?.full_name || '';
+  const userAvatar = user?.user_metadata?.avatar_url || '';
+  
   const [currencies, setCurrencies] = useState([
     { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
     { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
@@ -30,21 +35,21 @@ const Settings: React.FC = () => {
   ]);
   
   const [profileData, setProfileData] = useState({
-    name: user?.name || 'John Doe',
-    email: user?.email || 'john.doe@example.com',
-    avatar: user?.avatar || '',
+    name: userName || 'John Doe',
+    email: userEmail || 'john.doe@example.com',
+    avatar: userAvatar || '',
   });
   
   // Update profile data when user object changes
   useEffect(() => {
     if (user) {
       setProfileData({
-        name: user.name || profileData.name,
-        email: user.email || profileData.email,
-        avatar: user.avatar || profileData.avatar,
+        name: userName || profileData.name,
+        email: userEmail || profileData.email,
+        avatar: userAvatar || profileData.avatar,
       });
     }
-  }, [user]);
+  }, [user, userName, userEmail, userAvatar]);
   
   const [preferences, setPreferences] = useState({
     currency: localStorage.getItem('selectedCurrencyCode') || 'INR',

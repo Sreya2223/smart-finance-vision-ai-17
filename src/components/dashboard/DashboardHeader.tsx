@@ -32,6 +32,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
+  // Get user information
+  const userEmail = user?.email || '';
+  const userName = user?.user_metadata?.full_name || '';
+  const userAvatar = user?.user_metadata?.avatar_url || '';
+  
   const [currencies, setCurrencies] = useState<Currency[]>([
     { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
     { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
@@ -170,9 +175,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="cursor-pointer">
-              <AvatarImage src={user?.avatar || ""} />
+              <AvatarImage src={userAvatar} />
               <AvatarFallback className="bg-primary text-white">
-                {user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'JP'}
+                {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase() : userEmail.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
