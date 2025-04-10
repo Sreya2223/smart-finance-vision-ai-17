@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, createContext, useContext, useEffect } from "react";
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "./integrations/supabase/client";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -22,10 +24,11 @@ const queryClient = new QueryClient();
 // Create auth context
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (userData: any) => Promise<void>;
-  logout: () => void;
+  signup: (userData: { email: string; password: string; fullName: string }) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,62 +44,62 @@ export const useAuth = () => {
 // Auth provider component
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   
-  // Check for existing session on load
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session);
+    });
     
     // Set default currency to INR
     if (!localStorage.getItem('selectedCurrency')) {
       localStorage.setItem('selectedCurrency', '₹');
     }
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Login function
   const login = async (email: string, password: string) => {
-    // This would be replaced with a real API call
-    // For demo, we're just simulating a login
-    const mockUser = { 
-      id: '1', 
-      email, 
-      name: 'John Doe',
-      avatar: '',
-    };
-    
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    setUser(mockUser);
-    setIsAuthenticated(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
   // Signup function
-  const signup = async (userData: any) => {
-    // This would be replaced with a real API call
-    // For demo, we're just simulating a signup
-    const mockUser = { 
-      id: '1', 
-      ...userData,
-      avatar: '',
-    };
-    
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    setUser(mockUser);
-    setIsAuthenticated(true);
+  const signup = async ({ email, password, fullName }: { email: string; password: string; fullName: string }) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName
+        }
+      }
+    });
+    if (error) throw error;
   };
 
   // Logout function
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, signup, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, session, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

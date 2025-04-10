@@ -53,21 +53,22 @@ const SignupForm: React.FC = () => {
     try {
       // Call signup function from AuthContext
       await signup({
-        fullName: values.fullName,
         email: values.email,
+        password: values.password,
+        fullName: values.fullName,
       });
       
       toast({
         title: "Registration successful!",
-        description: "Welcome to Smart Pockets! Your account has been created.",
+        description: "Welcome to Smart Pockets! Your account has been created. Please check your email for verification.",
       });
       
       // Redirect to dashboard
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "There was an error creating your account. Please try again.",
+        description: error.message || "There was an error creating your account. Please try again.",
         variant: "destructive",
       });
     } finally {

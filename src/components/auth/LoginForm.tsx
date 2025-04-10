@@ -57,10 +57,10 @@ const LoginForm: React.FC = () => {
       
       // Navigate to the intended route or dashboard
       navigate(from, { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Invalid email or password. Please try again.",
+        description: error.message || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
