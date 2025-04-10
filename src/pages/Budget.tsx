@@ -166,7 +166,7 @@ const Budget: React.FC = () => {
                 <div className="flex justify-between">
                   <Label htmlFor="total-budget">Total Monthly Budget</Label>
                   <span className="flex items-center">
-                    <DollarSign className="h-4 w-4" />
+                    <span className="text-sm mr-1">₹</span>
                     <Input 
                       id="total-budget" 
                       type="number" 
@@ -177,9 +177,9 @@ const Budget: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Allocated: ${totalBudgeted}</span>
+                  <span>Allocated: ₹{totalBudgeted}</span>
                   <span className={remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}>
-                    Remaining: ${remainingBudget.toFixed(2)}
+                    Remaining: ₹{remainingBudget.toFixed(2)}
                   </span>
                 </div>
                 <Progress 
@@ -205,7 +205,7 @@ const Budget: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <Label htmlFor="new-budget">Budget Amount</Label>
-                          <span>${newCategory.budgeted}</span>
+                          <span>₹{newCategory.budgeted}</span>
                         </div>
                         <Slider 
                           id="new-budget"
@@ -246,7 +246,7 @@ const Budget: React.FC = () => {
                             <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
                           )}
                           <span className={isOverBudget ? 'text-red-500' : 'text-gray-700'}>
-                            ${category.spent.toFixed(2)} / ${category.budgeted.toFixed(2)}
+                            ₹{category.spent.toFixed(2)} / ₹{category.budgeted.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -287,16 +287,16 @@ const Budget: React.FC = () => {
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Total Budgeted</span>
-                  <span className="font-medium">${totalBudgeted.toFixed(2)}</span>
+                  <span className="font-medium">₹{totalBudgeted.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Total Spent</span>
-                  <span className="font-medium">${totalSpent.toFixed(2)}</span>
+                  <span className="font-medium">₹{totalSpent.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Remaining Budget</span>
                   <span className={`font-medium ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ${remainingBudget.toFixed(2)}
+                    ₹{remainingBudget.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -312,7 +312,7 @@ const Budget: React.FC = () => {
                         {category.icon}
                         <span className="text-sm">{category.name}</span>
                       </div>
-                      <span className="text-sm font-medium">${category.spent.toFixed(2)}</span>
+                      <span className="text-sm font-medium">₹{category.spent.toFixed(2)}</span>
                     </div>
                   ))
                 }
@@ -325,7 +325,7 @@ const Budget: React.FC = () => {
                   .map((category) => (
                     <div key={category.id} className="text-sm text-red-600 mb-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      <span>{category.name} is over budget by ${(category.spent - category.budgeted).toFixed(2)}</span>
+                      <span>{category.name} is over budget by ₹{(category.spent - category.budgeted).toFixed(2)}</span>
                     </div>
                   ))
                 }
