@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import RecentTransactions from '@/components/dashboard/transactions/RecentTransactions';
+import { addTransaction, Transaction } from '@/integrations/supabase/client';
 
 type IncomeItem = {
   id: string;
@@ -67,7 +69,7 @@ const Income: React.FC = () => {
     });
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newIncome.title || !newIncome.amount || !newIncome.category) {
@@ -79,28 +81,46 @@ const Income: React.FC = () => {
       return;
     }
     
-    const newItem: IncomeItem = {
-      id: Date.now().toString(),
-      title: newIncome.title,
-      amount: parseFloat(newIncome.amount),
-      category: newIncome.category,
-      date: newIncome.date,
-    };
-    
-    setIncomeItems(prev => [...prev, newItem]);
-    setNewIncome({
-      title: '',
-      amount: '',
-      category: '',
-      date: new Date().toISOString().slice(0, 10),
-    });
-    
-    setIsAdding(false);
-    
-    toast({
-      title: "Income added",
-      description: "The new income entry has been added successfully.",
-    });
+    try {
+      // Add the transaction to Supabase
+      await addTransaction({
+        title: newIncome.title,
+        amount: parseFloat(newIncome.amount),
+        category: newIncome.category,
+        date: newIncome.date,
+        type: 'income'
+      });
+      
+      // Update local state for immediate UI update
+      const newItem: IncomeItem = {
+        id: Date.now().toString(),
+        title: newIncome.title,
+        amount: parseFloat(newIncome.amount),
+        category: newIncome.category,
+        date: newIncome.date,
+      };
+      
+      setIncomeItems(prev => [...prev, newItem]);
+      setNewIncome({
+        title: '',
+        amount: '',
+        category: '',
+        date: new Date().toISOString().slice(0, 10),
+      });
+      
+      setIsAdding(false);
+      
+      toast({
+        title: "Income added",
+        description: "The new income entry has been added successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add income",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleExport = () => {
@@ -220,34 +240,42 @@ const Income: React.FC = () => {
         </Card>
       )}
       
-      <div className="grid grid-cols-1 gap-4">
-        {incomeItems.map(item => (
-          <Card key={item.id} className="group hover:border-primary transition-colors">
-            <CardContent className="p-4 flex justify-between items-center">
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-900">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.category} • {item.date}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold text-green-600">{selectedCurrency}{item.amount.toFixed(2)}</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => handleDelete(item.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Income items list - takes 2/3 of the width */}
+        <div className="md:col-span-2 space-y-4">
+          {incomeItems.map(item => (
+            <Card key={item.id} className="group hover:border-primary transition-colors">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900">{item.title}</h3>
+                  <p className="text-sm text-gray-500">{item.category} • {item.date}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-semibold text-green-600">{selectedCurrency}{item.amount.toFixed(2)}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleDelete(item.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          
+          {incomeItems.length === 0 && (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-500">No income sources found. Add your first income!</p>
+            </div>
+          )}
+        </div>
         
-        {incomeItems.length === 0 && (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-500">No income sources found. Add your first income!</p>
-          </div>
-        )}
+        {/* Recent transactions component - takes 1/3 of the width */}
+        <div>
+          <RecentTransactions limit={5} />
+        </div>
       </div>
     </DashboardLayout>
   );

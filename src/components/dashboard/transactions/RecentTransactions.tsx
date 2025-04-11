@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { getUserTransactions, Transaction } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 type RecentTransactionsProps = {
   limit?: number;
@@ -20,35 +21,42 @@ type RecentTransactionsProps = {
 const RecentTransactions: React.FC<RecentTransactionsProps> = ({ limit = 5 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('selectedCurrency') || '₹';
   });
   
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      setIsLoading(true);
+  // Use React Query to fetch transactions
+  const { data: transactions, isLoading, error } = useQuery({
+    queryKey: ['recentTransactions', limit],
+    queryFn: async () => {
       try {
         const data = await getUserTransactions();
-        setTransactions(data.slice(0, limit));
-        setError(null);
+        return data.slice(0, limit);
       } catch (err: any) {
         console.error('Error fetching transactions:', err);
-        setError(err.message || 'Failed to load transactions');
         toast({
           title: "Error loading transactions",
           description: err.message || 'Failed to load transactions',
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
+        throw err;
+      }
+    }
+  });
+
+  // Listen for currency changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setSelectedCurrency(e.newValue || '₹');
       }
     };
     
-    fetchTransactions();
-  }, [limit, toast]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleViewAll = () => {
     navigate('/dashboard');
@@ -72,11 +80,11 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ limit = 5 }) =>
           </div>
         ) : error ? (
           <div className="text-center py-6 text-destructive">
-            {error}
+            {(error as Error).message || 'Failed to load transactions'}
           </div>
         ) : (
           <div className="space-y-4">
-            {transactions.length > 0 ? (
+            {transactions && transactions.length > 0 ? (
               transactions.map((transaction) => (
                 <div
                   key={transaction.id}
