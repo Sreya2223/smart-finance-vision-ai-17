@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -8,17 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search } from 'lucide-react';
-import { getUserTransactions, Transaction } from '@/integrations/supabase/client';
+import { getUserTransactions, Transaction, addTransaction } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('selectedCurrency') || '₹';
   });
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   // Fetch transactions using React Query
   const { data: transactions, isLoading, error } = useQuery({
@@ -66,6 +68,15 @@ const Transactions: React.FC = () => {
     };
   }, []);
 
+  const handleAddTransaction = (newTransaction: Transaction) => {
+    // Invalidate and refetch transactions after adding a new one
+    queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+    toast({
+      title: "Transaction added",
+      description: `${newTransaction.title} has been added successfully.`,
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-6">
@@ -79,12 +90,20 @@ const Transactions: React.FC = () => {
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button>
+            <Button onClick={() => setIsAddTransactionOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Transaction
             </Button>
           </div>
         </div>
+
+        {/* Add Transaction Dialog */}
+        <AddTransactionForm 
+          isOpen={isAddTransactionOpen}
+          onClose={() => setIsAddTransactionOpen(false)}
+          onAddTransaction={handleAddTransaction}
+          currency={selectedCurrency}
+        />
 
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="relative flex-grow">
