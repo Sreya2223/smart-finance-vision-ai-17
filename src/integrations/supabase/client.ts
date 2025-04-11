@@ -38,7 +38,7 @@ export const getUserTransactions = async () => {
     .order('date', { ascending: false });
     
   if (error) throw error;
-  return data as Transaction[];
+  return data as unknown as Transaction[];
 };
 
 // Add a new transaction
@@ -56,7 +56,7 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'user
     .single();
   
   if (error) throw error;
-  return data as Transaction;
+  return data as unknown as Transaction;
 };
 
 // Update an existing transaction
@@ -69,7 +69,7 @@ export const updateTransaction = async (id: string, transaction: Partial<Transac
     .single();
   
   if (error) throw error;
-  return data as Transaction;
+  return data as unknown as Transaction;
 };
 
 // Delete a transaction
