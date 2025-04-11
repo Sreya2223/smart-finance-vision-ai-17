@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
+import RecentTransactions from '@/components/dashboard/transactions/RecentTransactions';
 import { 
   Utensils, 
   ShoppingBag, 
@@ -15,7 +15,6 @@ import {
   Train, 
   Gift, 
   AlertCircle,
-  DollarSign,
   Plus
 } from 'lucide-react';
 
@@ -128,8 +127,8 @@ const Budget: React.FC = () => {
     <DashboardLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Budget Planning</h1>
-          <p className="text-gray-600">Manage your monthly budget allocations</p>
+          <h1 className="text-2xl font-bold text-foreground">Budget Planning</h1>
+          <p className="text-muted-foreground">Manage your monthly budget allocations</p>
         </div>
         <div>
           <Button onClick={() => setIsAddingCategory(true)}>
@@ -148,7 +147,7 @@ const Budget: React.FC = () => {
                 <Label htmlFor="month-select">Month:</Label>
                 <select 
                   id="month-select" 
-                  className="border rounded px-2 py-1"
+                  className="border rounded px-2 py-1 bg-background text-foreground"
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
                 >
@@ -178,14 +177,14 @@ const Budget: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Allocated: ₹{totalBudgeted}</span>
-                  <span className={remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}>
+                  <span className={remainingBudget < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
                     Remaining: ₹{remainingBudget.toFixed(2)}
                   </span>
                 </div>
                 <Progress 
                   value={(totalBudgeted / totalBudget) * 100}
                   className="h-2"
-                  indicatorClassName={remainingBudget < 0 ? 'bg-red-600' : undefined}
+                  indicatorClassName={remainingBudget < 0 ? 'bg-red-600 dark:bg-red-500' : undefined}
                 />
               </div>
               
@@ -245,7 +244,7 @@ const Budget: React.FC = () => {
                           {isOverBudget && (
                             <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
                           )}
-                          <span className={isOverBudget ? 'text-red-500' : 'text-gray-700'}>
+                          <span className={isOverBudget ? 'text-red-500' : 'text-foreground'}>
                             ₹{category.spent.toFixed(2)} / ₹{category.budgeted.toFixed(2)}
                           </span>
                         </div>
@@ -255,8 +254,8 @@ const Budget: React.FC = () => {
                         <div className="space-y-1 flex-1">
                           <Progress 
                             value={percentage}
-                            className={`h-2 ${isOverBudget ? 'bg-red-200' : 'bg-gray-200'}`}
-                            indicatorClassName={isOverBudget ? 'bg-red-600' : 'bg-primary'}
+                            className={`h-2 ${isOverBudget ? 'bg-red-200 dark:bg-red-950' : 'bg-muted'}`}
+                            indicatorClassName={isOverBudget ? 'bg-red-600 dark:bg-red-500' : 'bg-primary'}
                           />
                         </div>
                         <div className="w-32">
@@ -277,67 +276,71 @@ const Budget: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget Summary</CardTitle>
-            <CardDescription>Overview of your monthly allocations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600">Total Budgeted</span>
-                  <span className="font-medium">₹{totalBudgeted.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600">Total Spent</span>
-                  <span className="font-medium">₹{totalSpent.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-600">Remaining Budget</span>
-                  <span className={`font-medium ${remainingBudget < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ₹{remainingBudget.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <h4 className="font-medium mb-3">Top Spending Categories</h4>
-                {[...budgetCategories]
-                  .sort((a, b) => b.spent - a.spent)
-                  .slice(0, 3)
-                  .map((category) => (
-                    <div key={category.id} className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        {category.icon}
-                        <span className="text-sm">{category.name}</span>
-                      </div>
-                      <span className="text-sm font-medium">₹{category.spent.toFixed(2)}</span>
-                    </div>
-                  ))
-                }
-              </div>
-              
-              <div className="pt-4 border-t">
-                <h4 className="font-medium mb-3">Budget Status</h4>
-                {budgetCategories
-                  .filter(category => category.spent > category.budgeted)
-                  .map((category) => (
-                    <div key={category.id} className="text-sm text-red-600 mb-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>{category.name} is over budget by ₹{(category.spent - category.budgeted).toFixed(2)}</span>
-                    </div>
-                  ))
-                }
-                {!budgetCategories.some(category => category.spent > category.budgeted) && (
-                  <div className="text-sm text-green-600">
-                    All categories are within budget!
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Budget Summary</CardTitle>
+              <CardDescription>Overview of your monthly allocations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Total Budgeted</span>
+                    <span className="font-medium">₹{totalBudgeted.toFixed(2)}</span>
                   </div>
-                )}
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Total Spent</span>
+                    <span className="font-medium">₹{totalSpent.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Remaining Budget</span>
+                    <span className={`font-medium ${remainingBudget < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                      ₹{remainingBudget.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <h4 className="font-medium mb-3">Top Spending Categories</h4>
+                  {[...budgetCategories]
+                    .sort((a, b) => b.spent - a.spent)
+                    .slice(0, 3)
+                    .map((category) => (
+                      <div key={category.id} className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          {category.icon}
+                          <span className="text-sm">{category.name}</span>
+                        </div>
+                        <span className="text-sm font-medium">₹{category.spent.toFixed(2)}</span>
+                      </div>
+                    ))
+                  }
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <h4 className="font-medium mb-3">Budget Status</h4>
+                  {budgetCategories
+                    .filter(category => category.spent > category.budgeted)
+                    .map((category) => (
+                      <div key={category.id} className="text-sm text-red-600 dark:text-red-400 mb-1 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        <span>{category.name} is over budget by ₹{(category.spent - category.budgeted).toFixed(2)}</span>
+                      </div>
+                    ))
+                  }
+                  {!budgetCategories.some(category => category.spent > category.budgeted) && (
+                    <div className="text-sm text-green-600 dark:text-green-400">
+                      All categories are within budget!
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          
+          <RecentTransactions limit={3} />
+        </div>
       </div>
     </DashboardLayout>
   );
