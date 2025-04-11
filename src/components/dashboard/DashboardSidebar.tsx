@@ -9,7 +9,8 @@ import {
   BarChart3, 
   Camera, 
   Settings,
-  LogOut
+  LogOut,
+  ListFilter
 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ const DashboardSidebar: React.FC = () => {
     { label: 'Dashboard', icon: Home, to: '/dashboard' },
     { label: 'Income', icon: DollarSign, to: '/income' },
     { label: 'Expenses', icon: CreditCard, to: '/expenses' },
+    { label: 'Transactions', icon: ListFilter, to: '/transactions' },
     { label: 'Budget', icon: PieChart, to: '/budget' },
     { label: 'Reports', icon: BarChart3, to: '/reports' },
     { label: 'Scan Receipt', icon: Camera, to: '/scan-receipt' },

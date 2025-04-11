@@ -18,6 +18,7 @@ import Expenses from "./pages/Expenses";
 import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Transactions from "./pages/Transactions";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,15 @@ const App = () => (
             />
             
             <Route 
+              path="/transactions" 
+              element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
               path="/budget" 
               element={
                 <ProtectedRoute>
@@ -198,6 +208,7 @@ const App = () => (
             <Route path="/demo/scan-receipt" element={<ScanReceipt />} />
             <Route path="/demo/income" element={<Income />} />
             <Route path="/demo/expenses" element={<Expenses />} />
+            <Route path="/demo/transactions" element={<Transactions />} />
             <Route path="/demo/budget" element={<Budget />} />
             <Route path="/demo/reports" element={<Reports />} />
             

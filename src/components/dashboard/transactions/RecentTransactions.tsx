@@ -59,7 +59,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ limit = 5 }) =>
   }, []);
 
   const handleViewAll = () => {
-    navigate('/dashboard');
+    navigate('/transactions');
   };
 
   return (
