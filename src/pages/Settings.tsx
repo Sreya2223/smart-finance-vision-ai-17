@@ -16,10 +16,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/App';
+import { useTheme } from '@/components/ui/theme-toggle';
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
   const { user, logout } = useAuth();
+  const { theme, setThemeValue } = useTheme();
   
   // Get user information from metadata
   const userEmail = user?.email || '';
@@ -53,12 +55,20 @@ const Settings: React.FC = () => {
   
   const [preferences, setPreferences] = useState({
     currency: localStorage.getItem('selectedCurrencyCode') || 'INR',
-    theme: 'light',
+    theme: theme || 'light', // Use the current theme from useTheme
     emailNotifications: true,
     appNotifications: true,
     budgetAlerts: true,
     weeklyReports: true,
   });
+  
+  // Update theme preference when theme changes
+  useEffect(() => {
+    setPreferences(prev => ({
+      ...prev,
+      theme
+    }));
+  }, [theme]);
   
   const handleProfileUpdate = () => {
     toast({
@@ -81,6 +91,11 @@ const Settings: React.FC = () => {
           newValue: currencyObj.symbol
         }));
       }
+    }
+    
+    // Update theme if changed
+    if (preferences.theme !== theme) {
+      setThemeValue(preferences.theme);
     }
     
     toast({

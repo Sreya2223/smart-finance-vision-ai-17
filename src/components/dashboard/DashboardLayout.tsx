@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useTheme } from '@/components/ui/theme-toggle';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -11,27 +12,7 @@ type DashboardLayoutProps = {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<string>('light');
-  
-  useEffect(() => {
-    // Check for theme in localStorage on component mount
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    
-    // Listen for theme changes from other components
-    const handleThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme') || 'light';
-      setTheme(currentTheme);
-    };
-    
-    window.addEventListener('storage', handleThemeChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleThemeChange);
-    };
-  }, []);
+  const { theme } = useTheme();
 
   return (
     <div className={cn(

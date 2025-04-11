@@ -4,7 +4,8 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
+// Create a custom hook to manage theme
+export function useTheme() {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') || 'light';
@@ -22,11 +23,27 @@ export function ThemeToggle() {
     
     // Save to localStorage
     localStorage.setItem('theme', theme);
+    
+    // Dispatch storage event so other components can listen
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'theme',
+      newValue: theme
+    }));
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
+  
+  const setThemeValue = (newTheme: string) => {
+    setTheme(newTheme);
+  };
+
+  return { theme, toggleTheme, setThemeValue };
+}
+
+export function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <Button 
