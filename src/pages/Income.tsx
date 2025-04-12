@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import RecentTransactions from '@/components/dashboard/transactions/RecentTransactions';
-import { addTransaction, Transaction } from '@/integrations/supabase/client';
+import { addTransaction } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 
 type IncomeItem = {
   id: string;
@@ -47,7 +47,6 @@ const Income: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   
   useEffect(() => {
-    // Listen for currency changes
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
         setSelectedCurrency(e.newValue || '$');
@@ -82,7 +81,6 @@ const Income: React.FC = () => {
     }
     
     try {
-      // Add the transaction to Supabase
       await addTransaction({
         title: newIncome.title,
         amount: parseFloat(newIncome.amount),
@@ -91,7 +89,6 @@ const Income: React.FC = () => {
         type: 'income'
       });
       
-      // Update local state for immediate UI update
       const newItem: IncomeItem = {
         id: Date.now().toString(),
         title: newIncome.title,
@@ -124,13 +121,11 @@ const Income: React.FC = () => {
   };
   
   const handleExport = () => {
-    // This would be where you implement the Excel export
     toast({
       title: "Export started",
       description: "Your income data is being exported to Excel.",
     });
     
-    // Simulating download delay
     setTimeout(() => {
       toast({
         title: "Export complete",
@@ -241,7 +236,6 @@ const Income: React.FC = () => {
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Income items list - takes 2/3 of the width */}
         <div className="md:col-span-2 space-y-4">
           {incomeItems.map(item => (
             <Card key={item.id} className="group hover:border-primary transition-colors">
@@ -272,7 +266,6 @@ const Income: React.FC = () => {
           )}
         </div>
         
-        {/* Recent transactions component - takes 1/3 of the width */}
         <div>
           <RecentTransactions limit={5} />
         </div>

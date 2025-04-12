@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search } from 'lucide-react';
-import { getUserTransactions, Transaction, addTransaction } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
+import { getUserTransactions } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -22,7 +23,6 @@ const Transactions: React.FC = () => {
   });
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
-  // Fetch transactions using React Query
   const { data: transactions, isLoading, error } = useQuery({
     queryKey: ['allTransactions'],
     queryFn: async () => {
@@ -40,7 +40,6 @@ const Transactions: React.FC = () => {
     }
   });
 
-  // Filter transactions based on search query and filter type
   const filteredTransactions = transactions?.filter(transaction => {
     const matchesSearch = searchQuery 
       ? transaction.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -54,7 +53,6 @@ const Transactions: React.FC = () => {
     return matchesSearch && matchesType;
   });
 
-  // Listen for currency changes
   React.useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
@@ -69,7 +67,6 @@ const Transactions: React.FC = () => {
   }, []);
 
   const handleAddTransaction = (newTransaction: Transaction) => {
-    // Invalidate and refetch transactions after adding a new one
     queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
     toast({
       title: "Transaction added",
@@ -97,7 +94,6 @@ const Transactions: React.FC = () => {
           </div>
         </div>
 
-        {/* Add Transaction Dialog */}
         <AddTransactionForm 
           isOpen={isAddTransactionOpen}
           onClose={() => setIsAddTransactionOpen(false)}

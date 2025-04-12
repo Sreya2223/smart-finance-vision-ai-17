@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
@@ -8,7 +9,8 @@ import BudgetProgressCard from '@/components/dashboard/budget/BudgetProgressCard
 import TaxSummaryCard from '@/components/dashboard/cards/TaxSummaryCard';
 import { Wallet, CreditCard, DollarSign, Utensils, ShoppingBag, Home, Train, Gift, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { getUserTransactions, Transaction, addTransaction, getTaxCalculation } from '@/integrations/supabase/client';
+import { getUserTransactions, getTaxCalculation } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 

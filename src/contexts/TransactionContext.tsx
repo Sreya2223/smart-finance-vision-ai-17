@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUserTransactions, Transaction, addTransaction } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { supabase, getUserTransactions, addTransaction } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 
 interface TransactionContextType {
   transactions: Transaction[];

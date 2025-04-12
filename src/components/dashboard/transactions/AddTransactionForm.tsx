@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DollarSign, Loader2 } from 'lucide-react';
-import { addTransaction, Transaction } from '@/integrations/supabase/client';
+import { addTransaction } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 
 type AddTransactionFormProps = {
   isOpen: boolean;

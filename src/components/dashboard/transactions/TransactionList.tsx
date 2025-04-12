@@ -9,8 +9,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getUserTransactions, Transaction } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Transaction } from '@/types/transaction';
+import { getUserTransactions } from '@/integrations/supabase/client';
 
 type TransactionListProps = {
   transactions?: Transaction[];

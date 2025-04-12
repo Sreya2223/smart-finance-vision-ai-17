@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getUserTransactions, Transaction } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { getUserTransactions } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transaction';
 
 type RecentTransactionsProps = {
   limit?: number;
