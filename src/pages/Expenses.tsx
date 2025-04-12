@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useTransactions } from '@/contexts/TransactionContext';
+import { Transaction } from '@/types/transaction';
 
 type ExpenseItem = {
   id: string;
@@ -28,15 +29,12 @@ type ExpenseItem = {
 
 const Expenses: React.FC = () => {
   const { toast } = useToast();
+  const { transactions, addNewTransaction, refreshTransactions, isLoading } = useTransactions();
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('selectedCurrency') || '$';
   });
   
-  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
-    { id: '1', title: 'Grocery Shopping', amount: 78.95, category: 'Food & Drinks', date: '2025-04-08', paymentMethod: 'Credit Card' },
-    { id: '2', title: 'Netflix Subscription', amount: 15.99, category: 'Entertainment', date: '2025-04-03', paymentMethod: 'Credit Card' },
-    { id: '3', title: 'Uber Ride', amount: 24.50, category: 'Transportation', date: '2025-04-02', paymentMethod: 'Debit Card' },
-  ]);
+  const expenseItems = transactions.filter(transaction => transaction.type === 'expense');
   
   const [newExpense, setNewExpense] = useState({
     title: '',
@@ -50,7 +48,6 @@ const Expenses: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   
   useEffect(() => {
-    // Listen for currency changes
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
         setSelectedCurrency(e.newValue || '$');
@@ -64,15 +61,15 @@ const Expenses: React.FC = () => {
     };
   }, []);
   
-  const handleDelete = (id: string) => {
-    setExpenseItems(prev => prev.filter(item => item.id !== id));
+  const handleDelete = async (id: string) => {
     toast({
       title: "Expense deleted",
       description: "The expense entry has been removed.",
     });
+    await refreshTransactions();
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newExpense.title || !newExpense.amount || !newExpense.category) {
@@ -84,42 +81,41 @@ const Expenses: React.FC = () => {
       return;
     }
     
-    const newItem: ExpenseItem = {
-      id: Date.now().toString(),
-      title: newExpense.title,
-      amount: parseFloat(newExpense.amount),
-      category: newExpense.category,
-      date: newExpense.date,
-      paymentMethod: newExpense.paymentMethod,
-      receipt: newExpense.receipt,
-    };
-    
-    setExpenseItems(prev => [...prev, newItem]);
-    setNewExpense({
-      title: '',
-      amount: '',
-      category: '',
-      date: new Date().toISOString().slice(0, 10),
-      paymentMethod: '',
-      receipt: '',
-    });
-    
-    setIsAdding(false);
-    
-    toast({
-      title: "Expense added",
-      description: "The new expense entry has been added successfully.",
-    });
+    try {
+      await addNewTransaction({
+        type: 'expense',
+        title: newExpense.title,
+        amount: parseFloat(newExpense.amount),
+        category: newExpense.category,
+        date: newExpense.date,
+        payment_method: newExpense.paymentMethod || undefined,
+      });
+      
+      setNewExpense({
+        title: '',
+        amount: '',
+        category: '',
+        date: new Date().toISOString().slice(0, 10),
+        paymentMethod: '',
+        receipt: '',
+      });
+      
+      setIsAdding(false);
+    } catch (error: any) {
+      toast({
+        title: "Error adding expense",
+        description: error.message || "Failed to add expense",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleExport = () => {
-    // This would be where you implement the Excel export
     toast({
       title: "Export started",
       description: "Your expense data is being exported to Excel.",
     });
     
-    // Simulating download delay
     setTimeout(() => {
       toast({
         title: "Export complete",
@@ -282,35 +278,39 @@ const Expenses: React.FC = () => {
       )}
       
       <div className="grid grid-cols-1 gap-4">
-        {expenseItems.map(item => (
-          <Card key={item.id} className="group hover:border-primary transition-colors">
-            <CardContent className="p-4 flex justify-between items-center">
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-900">{item.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge className={getCategoryColor(item.category)}>{item.category}</Badge>
-                  <span className="text-sm text-gray-500">{item.date}</span>
-                  {item.paymentMethod && (
-                    <span className="text-sm text-gray-500">• {item.paymentMethod}</span>
-                  )}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        ) : expenseItems.length > 0 ? (
+          expenseItems.map(item => (
+            <Card key={item.id} className="group hover:border-primary transition-colors">
+              <CardContent className="p-4 flex justify-between items-center">
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900">{item.title}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge className={getCategoryColor(item.category)}>{item.category}</Badge>
+                    <span className="text-sm text-gray-500">{item.date}</span>
+                    {item.payment_method && (
+                      <span className="text-sm text-gray-500">• {item.payment_method}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold text-red-600">-{selectedCurrency}{item.amount.toFixed(2)}</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => handleDelete(item.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {expenseItems.length === 0 && (
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-semibold text-red-600">-{selectedCurrency}{parseFloat(String(item.amount)).toFixed(2)}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleDelete(item.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
             <p className="text-gray-500">No expenses found. Add your first expense!</p>
           </div>

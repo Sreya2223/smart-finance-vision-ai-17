@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Transaction, TaxCalculation } from '@/types/transaction';
+import { Transaction, TaxCalculation, BudgetCategory } from '@/types/transaction';
 
 const supabaseUrl = 'https://jmxhubxganertfjcifyf.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpteGh1YnhnYW5lcnRmamNpZnlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzMDczNDYsImV4cCI6MjA1OTg4MzM0Nn0.0fkP7wBnt883bGmRxCmrXs8nM4vK1iZoVrcg6lvqTnM';
@@ -52,6 +52,28 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'user
   }
   
   return data as Transaction;
+};
+
+// Function to delete a transaction
+export const deleteTransaction = async (id: string) => {
+  const { data: userData } = await supabase.auth.getUser();
+  
+  if (!userData.user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { error } = await supabase
+    .from('transactions')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userData.user.id);
+  
+  if (error) {
+    console.error('Error deleting transaction:', error);
+    throw error;
+  }
+  
+  return true;
 };
 
 // Function to get tax calculation
@@ -109,16 +131,6 @@ export const saveTaxCalculation = async (taxData: {
   
   return data;
 };
-
-// Interface for BudgetCategory
-export interface BudgetCategory {
-  id: string;
-  name: string;
-  budgeted: number;
-  icon: string | null;
-  created_at?: string;
-  user_id?: string;
-}
 
 // Function to get user budget categories
 export const getUserBudgetCategories = async (): Promise<BudgetCategory[]> => {

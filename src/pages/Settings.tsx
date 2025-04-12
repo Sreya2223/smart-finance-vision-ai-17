@@ -17,18 +17,21 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ui/theme-toggle';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
   const { user, logout } = useAuth();
   const { theme, setThemeValue } = useTheme();
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Get user information from metadata
   const userEmail = user?.email || '';
   const userName = user?.user_metadata?.full_name || '';
   const userAvatar = user?.user_metadata?.avatar_url || '';
   
-  const [currencies, setCurrencies] = useState([
+  const [currencies] = useState([
     { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
     { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
     { code: 'GBP', symbol: '£', name: 'British Pound', flag: '🇬🇧' },
@@ -40,16 +43,20 @@ const Settings: React.FC = () => {
     name: userName || 'John Doe',
     email: userEmail || 'john.doe@example.com',
     avatar: userAvatar || '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   
   // Update profile data when user object changes
   useEffect(() => {
     if (user) {
-      setProfileData({
-        name: userName || profileData.name,
-        email: userEmail || profileData.email,
-        avatar: userAvatar || profileData.avatar,
-      });
+      setProfileData(prev => ({
+        ...prev,
+        name: userName || prev.name,
+        email: userEmail || prev.email,
+        avatar: userAvatar || prev.avatar,
+      }));
     }
   }, [user, userName, userEmail, userAvatar]);
   
@@ -70,11 +77,68 @@ const Settings: React.FC = () => {
     }));
   }, [theme]);
   
-  const handleProfileUpdate = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been saved.",
-    });
+  const handleProfileUpdate = async () => {
+    if (profileData.newPassword && profileData.newPassword !== profileData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Your new password and confirmation password do not match.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpdating(true);
+
+    try {
+      let updates = {};
+      
+      // Update name if provided
+      if (profileData.name && profileData.name !== userName) {
+        updates = {
+          ...updates,
+          data: { 
+            full_name: profileData.name 
+          }
+        };
+      }
+      
+      // Update password if provided
+      if (profileData.currentPassword && profileData.newPassword) {
+        const { error } = await supabase.auth.updateUser({
+          password: profileData.newPassword
+        });
+        
+        if (error) throw error;
+        
+        // Clear password fields
+        setProfileData({
+          ...profileData,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      }
+      
+      // Update metadata if needed
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase.auth.updateUser(updates);
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved.",
+      });
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile information",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
   
   const handlePreferencesUpdate = () => {
@@ -152,30 +216,59 @@ const Settings: React.FC = () => {
                       id="email" 
                       type="email"
                       value={profileData.email}
-                      onChange={e => setProfileData({...profileData, email: e.target.value})}
+                      readOnly
+                      disabled
+                      className="bg-gray-50"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" placeholder="Enter current password" />
+                  <Input 
+                    id="current-password" 
+                    type="password" 
+                    placeholder="Enter current password" 
+                    value={profileData.currentPassword}
+                    onChange={e => setProfileData({...profileData, currentPassword: e.target.value})}
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" placeholder="Enter new password" />
+                    <Input 
+                      id="new-password" 
+                      type="password" 
+                      placeholder="Enter new password" 
+                      value={profileData.newPassword}
+                      onChange={e => setProfileData({...profileData, newPassword: e.target.value})}
+                    />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm New Password</Label>
-                    <Input id="confirm-password" type="password" placeholder="Confirm new password" />
+                    <Input 
+                      id="confirm-password" 
+                      type="password" 
+                      placeholder="Confirm new password" 
+                      value={profileData.confirmPassword}
+                      onChange={e => setProfileData({...profileData, confirmPassword: e.target.value})}
+                    />
                   </div>
                 </div>
                 
                 <div className="flex justify-end">
-                  <Button onClick={handleProfileUpdate}>Save Changes</Button>
+                  <Button onClick={handleProfileUpdate} disabled={isUpdating}>
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>
