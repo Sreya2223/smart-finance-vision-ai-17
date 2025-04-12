@@ -33,7 +33,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </Sheet>
 
         {/* Main content */}
-        <div className={cn("flex-1 flex flex-col")}>
+        <div className={cn("flex-1 flex flex-col overflow-hidden")}>
           <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
           <main className="flex-1 overflow-auto p-4 md:p-6 bg-background dark:bg-slate-900 transition-colors duration-200">
             {children}

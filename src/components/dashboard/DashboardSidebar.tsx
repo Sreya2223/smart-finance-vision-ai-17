@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -71,7 +72,7 @@ const DashboardSidebar = () => {
   return (
     <div
       className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 flex-shrink-0 bg-white border-r border-gray-200 transition-transform transform-gpu",
+        "fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 bg-white border-r border-gray-200 transition-transform transform-gpu",
         open ? 'translate-x-0' : '-translate-x-full',
         isMobileOpen ? 'translate-x-0' : '-translate-x-full',
         "md:translate-x-0 md:w-64 md:border-r md:bg-background md:transition-none",

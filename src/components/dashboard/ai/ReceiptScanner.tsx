@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Upload, Check, AlertCircle, LoaderCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addTransaction } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useTransactions } from '@/contexts/TransactionContext';
 
 const ReceiptScanner: React.FC = () => {
   const [activeTab, setActiveTab] = useState('camera');
@@ -23,7 +21,7 @@ const ReceiptScanner: React.FC = () => {
     items: { name: string; price: number }[];
   }>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { addNewTransaction, refreshTransactions } = useTransactions();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,7 +32,6 @@ const ReceiptScanner: React.FC = () => {
 
   const handleCameraCapture = () => {
     // In a real implementation, this would access the device camera
-    // For now, we'll simulate the scan with a mock result
     simulateScan();
   };
 
@@ -80,8 +77,8 @@ const ReceiptScanner: React.FC = () => {
         ? `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
         : new Date().toISOString().split('T')[0];
 
-      // Add as a transaction
-      await addTransaction({
+      // Add as a transaction using the context
+      await addNewTransaction({
         type: 'expense',
         title: scanResult.merchant,
         amount: scanResult.total,
@@ -89,14 +86,13 @@ const ReceiptScanner: React.FC = () => {
         date: formattedDate,
         payment_method: paymentMethod,
       });
-
-      // Invalidate related queries to update UI across the app
-      queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
-      queryClient.invalidateQueries({ queryKey: ['budgetData'] });
+      
+      // This will trigger the real-time update across all pages
+      await refreshTransactions();
       
       toast({
         title: "Receipt saved!",
-        description: "The receipt has been added to your expenses and will be reflected in your dashboard.",
+        description: "The receipt has been added to your expenses and will be reflected across all pages.",
       });
       
       setScanResult(null);
