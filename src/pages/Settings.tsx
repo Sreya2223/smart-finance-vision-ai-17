@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/App';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/ui/theme-toggle';
 
 const Settings: React.FC = () => {
