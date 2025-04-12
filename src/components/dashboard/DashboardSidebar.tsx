@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -84,7 +83,7 @@ const DashboardSidebar = () => {
             <Logo className="h-8 w-auto" />
           </Link>
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
-            {isOpen ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
+            {open ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
           </Button>
         </div>
         
