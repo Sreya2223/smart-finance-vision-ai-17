@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -22,17 +23,17 @@ interface NavSection {
 }
 
 const DashboardSidebar = () => {
-  const { isOpen, setIsOpen } = useSidebar();
+  const { state, open, setOpen } = useSidebar();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const toggleSidebar = () => {
-    setIsOpen(!isOpen);
+    setOpen(!open);
     setIsMobileOpen(!isMobileOpen);
   };
 
   const closeSidebar = () => {
-    setIsOpen(false);
+    setOpen(false);
     setIsMobileOpen(false);
   };
 
@@ -72,7 +73,7 @@ const DashboardSidebar = () => {
     <div
       className={cn(
         "fixed inset-y-0 left-0 z-40 w-64 flex-shrink-0 bg-white border-r border-gray-200 transition-transform transform-gpu",
-        isOpen ? 'translate-x-0' : '-translate-x-full',
+        open ? 'translate-x-0' : '-translate-x-full',
         isMobileOpen ? 'translate-x-0' : '-translate-x-full',
         "md:translate-x-0 md:w-64 md:border-r md:bg-background md:transition-none",
       )}

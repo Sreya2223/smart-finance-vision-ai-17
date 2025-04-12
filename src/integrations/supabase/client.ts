@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
@@ -145,7 +144,7 @@ export const saveTaxCalculation = async (details: {
         tax: details.tax,
         effective_rate: details.effectiveRate,
         in_hand: details.inHand,
-      })
+      } as any)
       .select()
       .single();
       
