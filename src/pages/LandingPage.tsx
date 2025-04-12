@@ -34,7 +34,7 @@ const LandingPage: React.FC = () => {
       {/* Header */}
       <header className="w-full py-4 px-6 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Logo />
+          <Logo size="lg" />
           <div className="flex items-center gap-4">
             <Link to="/login">
               <Button variant="ghost">Log in</Button>
@@ -79,7 +79,7 @@ const LandingPage: React.FC = () => {
             <img
               src="/lovable-uploads/13185240-d1b7-411e-94a9-2d83dd38b7fb.png"
               alt="Smart Pockets Dashboard"
-              className="w-full h-auto rounded-lg shadow-xl border border-gray-200"
+              className="w-full h-auto max-w-md mx-auto"
             />
           </div>
         </div>

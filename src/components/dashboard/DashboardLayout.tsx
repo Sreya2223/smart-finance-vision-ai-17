@@ -18,11 +18,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <SidebarProvider>
       <div className={cn(
-        "flex h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full",
+        "flex min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full",
       )}>
         {/* Desktop sidebar */}
-        <div className="hidden md:flex">
-          <DashboardSidebar />
+        <div className="hidden md:block md:w-64 flex-shrink-0">
+          <div className="fixed h-full">
+            <DashboardSidebar />
+          </div>
         </div>
 
         {/* Mobile sidebar */}

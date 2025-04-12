@@ -22,3 +22,12 @@ export interface TaxCalculation {
   taxable_income: number;
   created_at?: string;
 }
+
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  budgeted: number;
+  icon: string | null;
+  created_at?: string;
+  user_id?: string;
+}

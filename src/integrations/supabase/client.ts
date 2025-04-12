@@ -1,23 +1,11 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { Transaction, TaxCalculation } from '@/types/transaction';
 
 const supabaseUrl = 'https://jmxhubxganertfjcifyf.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpteGh1YnhnYW5lcnRmamNpZnlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzMDczNDYsImV4cCI6MjA1OTg4MzM0Nn0.0fkP7wBnt883bGmRxCmrXs8nM4vK1iZoVrcg6lvqTnM';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Define Transaction type
-export interface Transaction {
-  id: string;
-  title: string;
-  amount: number | string;
-  category: string;
-  date: string;
-  type: 'income' | 'expense';
-  payment_method?: string;
-  user_id?: string;
-  created_at?: string;
-}
 
 // Function to get user transactions
 export const getUserTransactions = async (): Promise<Transaction[]> => {
@@ -120,4 +108,107 @@ export const saveTaxCalculation = async (taxData: {
   }
   
   return data;
+};
+
+// Interface for BudgetCategory
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  budgeted: number;
+  icon: string | null;
+  created_at?: string;
+  user_id?: string;
+}
+
+// Function to get user budget categories
+export const getUserBudgetCategories = async (): Promise<BudgetCategory[]> => {
+  const { data: userData } = await supabase.auth.getUser();
+  
+  if (!userData.user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { data, error } = await supabase
+    .from('budget_categories')
+    .select('*')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching budget categories:', error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Function to add a budget category
+export const addBudgetCategory = async (category: Omit<BudgetCategory, 'id' | 'user_id' | 'created_at'>) => {
+  const { data: userData } = await supabase.auth.getUser();
+  
+  if (!userData.user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { data, error } = await supabase
+    .from('budget_categories')
+    .insert({
+      ...category,
+      user_id: userData.user.id,
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error adding budget category:', error);
+    throw error;
+  }
+  
+  return data as BudgetCategory;
+};
+
+// Function to update a budget category
+export const updateBudgetCategory = async (id: string, updates: Partial<Omit<BudgetCategory, 'id' | 'user_id' | 'created_at'>>) => {
+  const { data: userData } = await supabase.auth.getUser();
+  
+  if (!userData.user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { data, error } = await supabase
+    .from('budget_categories')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userData.user.id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating budget category:', error);
+    throw error;
+  }
+  
+  return data as BudgetCategory;
+};
+
+// Function to delete a budget category
+export const deleteBudgetCategory = async (id: string) => {
+  const { data: userData } = await supabase.auth.getUser();
+  
+  if (!userData.user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { error } = await supabase
+    .from('budget_categories')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userData.user.id);
+  
+  if (error) {
+    console.error('Error deleting budget category:', error);
+    throw error;
+  }
+  
+  return true;
 };

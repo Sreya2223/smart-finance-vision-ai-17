@@ -31,7 +31,7 @@ import {
 const Reports: React.FC = () => {
   const { toast } = useToast();
   const [timeRange, setTimeRange] = useState('last6Months');
-  const [currency, setCurrency] = useState('$');
+  const [currency, setCurrency] = useState('₹');
   
   // Sample data for reports
   const monthlyData = [

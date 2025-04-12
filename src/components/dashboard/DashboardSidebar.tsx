@@ -72,13 +72,10 @@ const DashboardSidebar = () => {
   return (
     <div
       className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 bg-white border-r border-gray-200 transition-transform transform-gpu",
-        open ? 'translate-x-0' : '-translate-x-full',
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full',
-        "md:translate-x-0 md:w-64 md:border-r md:bg-background md:transition-none",
+        "h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto",
       )}
     >
-      <div className="h-full px-3 py-4 overflow-y-auto bg-white md:bg-background">
+      <div className="h-full px-3 py-4">
         <div className="flex items-center justify-between mb-6">
           <Link to="/dashboard" className="flex items-center">
             <Logo className="h-8 w-auto" />
@@ -91,7 +88,7 @@ const DashboardSidebar = () => {
         <div className="space-y-4">
           {navigation.map((section, index) => (
             <div key={index} className="space-y-1">
-              <h3 className="text-sm font-medium text-gray-500 px-3">{section.label}</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 px-3">{section.label}</h3>
               <ul className="space-y-1">
                 {section.links.map((link) => (
                   <li key={link.name}>
@@ -99,8 +96,10 @@ const DashboardSidebar = () => {
                       to={link.href}
                       onClick={closeSidebar}
                       className={cn(
-                        "flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium",
-                        location.pathname === link.href ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                        "flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium",
+                        location.pathname === link.href 
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                          : 'text-gray-700 dark:text-gray-200',
                       )}
                     >
                       {link.icon}
