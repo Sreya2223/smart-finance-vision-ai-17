@@ -82,3 +82,89 @@ export const deleteTransaction = async (id: string) => {
   if (error) throw error;
   return true;
 };
+
+// Tax calculation types
+export type TaxCalculation = {
+  id: string;
+  user_id: string;
+  regime: string;
+  income: number;
+  taxable_income: number;
+  tax: number;
+  effective_rate: number;
+  in_hand: number;
+  created_at: string;
+};
+
+// Save a tax calculation
+export const saveTaxCalculation = async (details: {
+  regime: string;
+  income: number;
+  taxableIncome: number;
+  tax: number;
+  effectiveRate: number;
+  inHand: number;
+}) => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('Not authenticated');
+  
+  // First check if we already have a calculation for this user
+  const { data: existingCalc } = await supabase
+    .from('tax_calculations')
+    .select('*')
+    .eq('user_id', user.user.id)
+    .maybeSingle();
+    
+  if (existingCalc) {
+    // Update existing calculation
+    const { data, error } = await supabase
+      .from('tax_calculations')
+      .update({
+        regime: details.regime,
+        income: details.income,
+        taxable_income: details.taxableIncome,
+        tax: details.tax,
+        effective_rate: details.effectiveRate,
+        in_hand: details.inHand,
+      })
+      .eq('id', existingCalc.id)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data as unknown as TaxCalculation;
+  } else {
+    // Insert new calculation
+    const { data, error } = await supabase
+      .from('tax_calculations')
+      .insert({
+        user_id: user.user.id,
+        regime: details.regime,
+        income: details.income,
+        taxable_income: details.taxableIncome,
+        tax: details.tax,
+        effective_rate: details.effectiveRate,
+        in_hand: details.inHand,
+      })
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data as unknown as TaxCalculation;
+  }
+};
+
+// Get the latest tax calculation
+export const getTaxCalculation = async () => {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) throw new Error('Not authenticated');
+  
+  const { data, error } = await supabase
+    .from('tax_calculations')
+    .select('*')
+    .eq('user_id', user.user.id)
+    .maybeSingle();
+    
+  if (error) throw error;
+  return data as unknown as TaxCalculation | null;
+};

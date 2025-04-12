@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
@@ -6,10 +5,12 @@ import ChartCard from '@/components/dashboard/charts/ChartCard';
 import TransactionList from '@/components/dashboard/transactions/TransactionList';
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 import BudgetProgressCard from '@/components/dashboard/budget/BudgetProgressCard';
+import TaxSummaryCard from '@/components/dashboard/cards/TaxSummaryCard';
 import { Wallet, CreditCard, DollarSign, Utensils, ShoppingBag, Home, Train, Gift, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { getUserTransactions, Transaction, addTransaction } from '@/integrations/supabase/client';
+import { getUserTransactions, Transaction, addTransaction, getTaxCalculation } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 const Dashboard: React.FC = () => {
   // Get the currency from localStorage
@@ -94,6 +95,19 @@ const Dashboard: React.FC = () => {
     
     fetchData();
   }, [toast]);
+  
+  // Fetch tax calculation data
+  const { data: taxData, isLoading: taxLoading } = useQuery({
+    queryKey: ['taxCalculation'],
+    queryFn: async () => {
+      try {
+        return await getTaxCalculation();
+      } catch (error) {
+        console.error('Error fetching tax calculation:', error);
+        return null;
+      }
+    }
+  });
   
   // Process transaction data for charts
   const processChartData = (transactions: Transaction[]) => {
@@ -337,13 +351,31 @@ const Dashboard: React.FC = () => {
         </ChartCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TransactionList 
-          transactions={recentTransactions.slice(0, 5)}
-          currency={selectedCurrency} 
-          onAddTransaction={() => setIsAddingTransaction(true)}
-        />
-        <BudgetProgressCard categories={budgetCategories} currency={selectedCurrency} month="April 2025" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <TransactionList 
+            transactions={recentTransactions.slice(0, 5)}
+            currency={selectedCurrency} 
+            onAddTransaction={() => setIsAddingTransaction(true)}
+          />
+        </div>
+        <div className="space-y-6">
+          <TaxSummaryCard 
+            taxData={taxData ? {
+              regime: taxData.regime,
+              income: taxData.income,
+              tax: taxData.tax,
+              inHand: taxData.in_hand
+            } : undefined}
+            currency={selectedCurrency}
+            isLoading={taxLoading}
+          />
+          <BudgetProgressCard 
+            categories={budgetCategories} 
+            currency={selectedCurrency} 
+            month="April 2025" 
+          />
+        </div>
       </div>
       
       {/* Transaction input dialog */}

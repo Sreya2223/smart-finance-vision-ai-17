@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,10 +18,10 @@ import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Transactions from "./pages/Transactions";
+import TaxCalculator from "./pages/TaxCalculator";
 
 const queryClient = new QueryClient();
 
-// Create auth context
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
@@ -42,14 +41,12 @@ export const useAuth = () => {
   return context;
 };
 
-// Auth provider component
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -58,14 +55,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setIsAuthenticated(!!session);
     });
     
-    // Set default currency to INR
     if (!localStorage.getItem('selectedCurrency')) {
       localStorage.setItem('selectedCurrency', '₹');
     }
@@ -73,13 +68,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Login function
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
-  // Signup function
   const signup = async ({ email, password, fullName }: { email: string; password: string; fullName: string }) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -93,7 +86,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) throw error;
   };
 
-  // Logout function
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -106,7 +98,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
@@ -125,12 +116,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             
-            {/* Protected routes */}
             <Route 
               path="/dashboard" 
               element={
@@ -203,7 +192,15 @@ const App = () => (
               } 
             />
             
-            {/* For demo purposes, also allow direct access */}
+            <Route 
+              path="/tax-calculator" 
+              element={
+                <ProtectedRoute>
+                  <TaxCalculator />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="/demo/dashboard" element={<Dashboard />} />
             <Route path="/demo/scan-receipt" element={<ScanReceipt />} />
             <Route path="/demo/income" element={<Income />} />
@@ -211,8 +208,8 @@ const App = () => (
             <Route path="/demo/transactions" element={<Transactions />} />
             <Route path="/demo/budget" element={<Budget />} />
             <Route path="/demo/reports" element={<Reports />} />
+            <Route path="/demo/tax-calculator" element={<TaxCalculator />} />
             
-            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,73 +1,119 @@
-
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
-  Home, 
-  CreditCard, 
-  DollarSign, 
-  PieChart, 
-  BarChart3, 
-  Camera, 
-  Settings,
-  LogOut,
-  ListFilter
-} from 'lucide-react';
-import Logo from '@/components/common/Logo';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/App';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { 
+  ChevronLeft, ChevronRight, LayoutDashboard, CreditCard, Banknote, 
+  BarChart3, File, Settings, Receipt, Calculator, Wallet
+} from 'lucide-react';
+import { useSidebar } from '@/components/ui/sidebar';
+import Logo from '@/components/common/Logo';
 
-const DashboardSidebar: React.FC = () => {
-  const { logout } = useAuth();
-  
-  const navItems = [
-    { label: 'Dashboard', icon: Home, to: '/dashboard' },
-    { label: 'Income', icon: DollarSign, to: '/income' },
-    { label: 'Expenses', icon: CreditCard, to: '/expenses' },
-    { label: 'Transactions', icon: ListFilter, to: '/transactions' },
-    { label: 'Budget', icon: PieChart, to: '/budget' },
-    { label: 'Reports', icon: BarChart3, to: '/reports' },
-    { label: 'Scan Receipt', icon: Camera, to: '/scan-receipt' },
-    { label: 'Settings', icon: Settings, to: '/settings' },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+}
+
+interface NavSection {
+  label: string;
+  links: NavItem[];
+}
+
+const DashboardSidebar = () => {
+  const { isOpen, setIsOpen } = useSidebar();
+  const location = useLocation();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsOpen(false);
+    setIsMobileOpen(false);
+  };
+
+  const navigation = [
+    {
+      label: 'Main',
+      links: [
+        { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+        { name: 'Transactions', href: '/transactions', icon: <File className="h-5 w-5" /> },
+      ]
+    },
+    {
+      label: 'Finance',
+      links: [
+        { name: 'Income', href: '/income', icon: <Banknote className="h-5 w-5" /> },
+        { name: 'Expenses', href: '/expenses', icon: <CreditCard className="h-5 w-5" /> },
+        { name: 'Budget', href: '/budget', icon: <Wallet className="h-5 w-5" /> },
+      ]
+    },
+    {
+      label: 'Analysis',
+      links: [
+        { name: 'Reports', href: '/reports', icon: <BarChart3 className="h-5 w-5" /> },
+        { name: 'Tax Calculator', href: '/tax-calculator', icon: <Calculator className="h-5 w-5" /> },
+      ]
+    },
+    {
+      label: 'Tools',
+      links: [
+        { name: 'Scan Receipt', href: '/scan-receipt', icon: <Receipt className="h-5 w-5" /> },
+        { name: 'Settings', href: '/settings', icon: <Settings className="h-5 w-5" /> },
+      ]
+    }
   ];
-  
+
   return (
-    <aside className="w-16 md:w-56 h-full bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 flex flex-col shadow-lg">
-      <div className="p-4 flex justify-center md:justify-start">
-        <Logo size="md" showText={false} className="md:hidden" />
-        <Logo size="md" showText={true} className="hidden md:block" />
-      </div>
-      
-      <nav className="flex-1 px-2 py-4">
-        <ul className="space-y-1">
-          {navItems.map((item) => (
-            <li key={item.label}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) => cn(
-                  "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-indigo-600 text-white shadow-md" 
-                    : "text-slate-300 hover:bg-slate-700/50"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="hidden md:inline">{item.label}</span>
-              </NavLink>
-            </li>
+    <div
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 w-64 flex-shrink-0 bg-white border-r border-gray-200 transition-transform transform-gpu",
+        isOpen ? 'translate-x-0' : '-translate-x-full',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full',
+        "md:translate-x-0 md:w-64 md:border-r md:bg-background md:transition-none",
+      )}
+    >
+      <div className="h-full px-3 py-4 overflow-y-auto bg-white md:bg-background">
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/dashboard" className="flex items-center">
+            <Logo className="h-8 w-auto" />
+          </Link>
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
+            {isOpen ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
+          </Button>
+        </div>
+        
+        <div className="space-y-4">
+          {navigation.map((section, index) => (
+            <div key={index} className="space-y-1">
+              <h3 className="text-sm font-medium text-gray-500 px-3">{section.label}</h3>
+              <ul className="space-y-1">
+                {section.links.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      onClick={closeSidebar}
+                      className={cn(
+                        "flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium",
+                        location.pathname === link.href ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+                      )}
+                    >
+                      {link.icon}
+                      <span>{link.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {index < navigation.length - 1 && <Separator className="my-2" />}
+            </div>
           ))}
-        </ul>
-      </nav>
-      
-      <div className="p-3 border-t border-slate-700">
-        <button 
-          onClick={logout}
-          className="flex items-center space-x-2 w-full px-3 py-2 text-sm font-medium text-red-400 hover:bg-slate-700/50 rounded-md transition-colors"
-        >
-          <LogOut className="h-5 w-5" />
-          <span className="hidden md:inline">Logout</span>
-        </button>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

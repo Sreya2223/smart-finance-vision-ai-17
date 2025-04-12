@@ -5,12 +5,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Upload, Check, AlertCircle, LoaderCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { addTransaction } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ReceiptScanner: React.FC = () => {
   const [activeTab, setActiveTab] = useState('camera');
   const [isScanning, setIsScanning] = useState(false);
+  const [receiptCategory, setReceiptCategory] = useState('Groceries');
+  const [paymentMethod, setPaymentMethod] = useState('Credit Card');
   const [scanResult, setScanResult] = useState<null | {
     merchant: string;
     date: string;
@@ -18,6 +23,7 @@ const ReceiptScanner: React.FC = () => {
     items: { name: string; price: number }[];
   }>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,13 +70,44 @@ const ReceiptScanner: React.FC = () => {
     }, 2000);
   };
 
-  const handleSave = () => {
-    // In a real app, this would save the receipt data to the database
-    toast({
-      title: "Receipt saved!",
-      description: "The receipt has been added to your expenses.",
-    });
-    setScanResult(null);
+  const handleSave = async () => {
+    if (!scanResult) return;
+
+    try {
+      // Format date as YYYY-MM-DD for database
+      const dateParts = scanResult.date.split('/');
+      const formattedDate = dateParts.length === 3 
+        ? `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
+        : new Date().toISOString().split('T')[0];
+
+      // Add as a transaction
+      await addTransaction({
+        type: 'expense',
+        title: scanResult.merchant,
+        amount: scanResult.total,
+        category: receiptCategory,
+        date: formattedDate,
+        payment_method: paymentMethod,
+      });
+
+      // Invalidate related queries to update UI across the app
+      queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+      queryClient.invalidateQueries({ queryKey: ['budgetData'] });
+      
+      toast({
+        title: "Receipt saved!",
+        description: "The receipt has been added to your expenses and will be reflected in your dashboard.",
+      });
+      
+      setScanResult(null);
+    } catch (error: any) {
+      console.error('Error saving receipt:', error);
+      toast({
+        title: "Error saving receipt",
+        description: error.message || "Failed to save the receipt data",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -154,6 +191,43 @@ const ReceiptScanner: React.FC = () => {
                 <div>
                   <Label className="text-gray-500">Date</Label>
                   <div className="font-medium">{scanResult.date}</div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-500">Category</Label>
+                  <Select value={receiptCategory} onValueChange={setReceiptCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Groceries">Groceries</SelectItem>
+                      <SelectItem value="Dining">Dining</SelectItem>
+                      <SelectItem value="Transportation">Transportation</SelectItem>
+                      <SelectItem value="Shopping">Shopping</SelectItem>
+                      <SelectItem value="Entertainment">Entertainment</SelectItem>
+                      <SelectItem value="Utilities">Utilities</SelectItem>
+                      <SelectItem value="Health">Health</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-gray-500">Payment Method</Label>
+                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Credit Card">Credit Card</SelectItem>
+                      <SelectItem value="Debit Card">Debit Card</SelectItem>
+                      <SelectItem value="UPI">UPI</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
