@@ -16,6 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, User, Mail, Lock } from 'lucide-react';
 
 // Form validation schema
 const formSchema = z.object({
@@ -32,6 +34,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignupForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +52,7 @@ const SignupForm: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       // Call signup function from AuthContext
@@ -60,15 +64,17 @@ const SignupForm: React.FC = () => {
       
       toast({
         title: "Registration successful!",
-        description: "Welcome to Smart Pockets! Your account has been created. Please check your email for verification.",
+        description: "Welcome to Smart Pockets! Your account has been created.",
       });
       
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (error: any) {
+      setErrorMessage(error.message || "There was an error creating your account. Please try again.");
+      
       toast({
         title: "Error",
-        description: error.message || "There was an error creating your account. Please try again.",
+        description: error.message || "Registration failed. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -78,20 +84,32 @@ const SignupForm: React.FC = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      {errorMessage && (
+        <Alert className="mb-6 bg-destructive/15 border-destructive/30">
+          <AlertDescription className="text-destructive">
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel className="text-foreground/80">Full Name</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="text"
-                  placeholder="Your full name"
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    type="text"
+                    placeholder="John Doe"
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -103,14 +121,18 @@ const SignupForm: React.FC = () => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-foreground/80">Email</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="email"
-                  placeholder="Your email address"
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="your.email@example.com"
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -122,14 +144,18 @@ const SignupForm: React.FC = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-foreground/80">Password</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Create a password"
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,27 +167,40 @@ const SignupForm: React.FC = () => {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel className="text-foreground/80">Confirm Password</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Confirm your password"
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <Button type="submit" className="w-full bg-primary hover:bg-primary-600" disabled={isLoading}>
-          {isLoading ? 'Creating account...' : 'Create account'}
+        <Button 
+          type="submit" 
+          className="w-full bg-primary hover:bg-primary-600 h-12 mt-6 text-base font-medium" 
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Creating account...
+            </>
+          ) : 'Create account'}
         </Button>
         
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <span className="text-gray-600">Already have an account? </span>
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to="/login" className="text-primary hover:underline font-medium">
             Log in
           </Link>
         </div>

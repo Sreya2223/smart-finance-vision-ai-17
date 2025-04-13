@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session ? 'Session found' : 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -48,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } catch (error: any) {
+      console.error('Login error:', error.message);
       throw error;
     }
   };
@@ -65,11 +68,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (error) throw error;
       
-      toast({
-        title: "Account created",
-        description: "Please check your email to verify your account.",
-      });
+      // Success message handled in the form component
     } catch (error: any) {
+      console.error('Signup error:', error.message);
       throw error;
     }
   };
@@ -78,9 +79,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // After successful logout
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      
       navigate('/login');
     } catch (error: any) {
-      console.error("Error logging out:", error);
+      console.error("Error logging out:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     }
   };
