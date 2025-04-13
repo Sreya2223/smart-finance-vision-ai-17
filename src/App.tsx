@@ -12,6 +12,7 @@ import ScanReceipt from './pages/ScanReceipt';
 import Settings from './pages/Settings';
 import Budget from './pages/Budget';
 import TaxCalculator from './pages/TaxCalculator';
+import Income from './pages/Income';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { useTheme } from '@/components/ui/theme-toggle';
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/expenses" element={<Expenses />} />
+                <Route path="/income" element={<Income />} />
                 <Route path="/scan-receipt" element={<ScanReceipt />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/budget" element={<Budget />} />

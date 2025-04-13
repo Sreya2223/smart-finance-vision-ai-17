@@ -24,7 +24,29 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalBalance, setTotalBalance] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check authentication status
+  useEffect(() => {
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session?.user);
+      
+      if (event === 'SIGNED_IN') {
+        queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+      }
+    });
+
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
+  
   const {
     data: transactions = [],
     isLoading,
@@ -33,18 +55,22 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   } = useQuery({
     queryKey: ['allTransactions'],
     queryFn: async () => {
+      if (!isAuthenticated) {
+        return []; // Return empty array when not authenticated
+      }
+      
       try {
         return await getUserTransactions();
       } catch (err: any) {
+        if (err.message === 'User not authenticated') {
+          // This is expected when not logged in
+          return [];
+        }
         console.error('Error fetching transactions:', err);
-        toast({
-          title: "Error loading transactions",
-          description: err.message || 'Failed to load transactions',
-          variant: "destructive",
-        });
         throw err;
       }
-    }
+    },
+    enabled: isAuthenticated // Only run query when authenticated
   });
 
   // Calculate totals whenever transactions change
@@ -67,6 +93,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Set up real-time subscription to transaction changes
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const channel = supabase
       .channel('db-changes')
       .on('postgres_changes', 
@@ -81,7 +109,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const refreshTransactions = async () => {
     await refetch();
@@ -90,6 +118,15 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const addNewTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add transactions.",
+        variant: "destructive",
+      });
+      throw new Error("User not authenticated");
+    }
+    
     try {
       await addTransaction(transaction);
       toast({
@@ -104,6 +141,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         description: error.message || 'Failed to add transaction',
         variant: "destructive",
       });
+      throw error;
     }
   };
 

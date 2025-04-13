@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -6,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search, Upload, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 import { getUserTransactions } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/transaction';
+import ReceiptScanner from '@/components/dashboard/ai/ReceiptScanner';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -22,6 +24,7 @@ const Transactions: React.FC = () => {
     return localStorage.getItem('selectedCurrency') || '₹';
   });
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
 
   const { data: transactions, isLoading, error } = useQuery({
     queryKey: ['allTransactions'],
@@ -83,6 +86,10 @@ const Transactions: React.FC = () => {
             <p className="text-muted-foreground">View and manage all your financial transactions</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsReceiptScannerOpen(true)}>
+              <Camera className="h-4 w-4 mr-2" />
+              Scan Receipt
+            </Button>
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Export
@@ -100,6 +107,23 @@ const Transactions: React.FC = () => {
           onAddTransaction={handleAddTransaction}
           currency={selectedCurrency}
         />
+
+        {isReceiptScannerOpen && (
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Scan Receipt</CardTitle>
+                <CardDescription>Use AI to extract data from your receipt</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setIsReceiptScannerOpen(false)}>
+                ×
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <ReceiptScanner onClose={() => setIsReceiptScannerOpen(false)} />
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="relative flex-grow">
