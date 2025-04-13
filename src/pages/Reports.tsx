@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { useTransactions } from '@/contexts/TransactionContext';
 import { FileDown, BarChart as BarChartIcon, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import { 
   BarChart, 
@@ -30,55 +31,124 @@ import {
 
 const Reports: React.FC = () => {
   const { toast } = useToast();
+  const { transactions } = useTransactions();
   const [timeRange, setTimeRange] = useState('last6Months');
-  const [currency, setCurrency] = useState('₹');
+  const [currency, setCurrency] = useState(() => {
+    return localStorage.getItem('selectedCurrency') || '₹';
+  });
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [savingsData, setSavingsData] = useState<any[]>([]);
   
-  // Sample data for reports
-  const monthlyData = [
-    { month: 'Jan', income: 2500, expenses: 1200, savings: 1300 },
-    { month: 'Feb', income: 2500, expenses: 1900, savings: 600 },
-    { month: 'Mar', income: 2700, expenses: 1500, savings: 1200 },
-    { month: 'Apr', income: 2600, expenses: 1800, savings: 800 },
-    { month: 'May', income: 2800, expenses: 1300, savings: 1500 },
-    { month: 'Jun', income: 3000, expenses: 1700, savings: 1300 },
-  ];
-  
-  const categoryData = [
-    { name: 'Food & Dining', value: 480, color: '#F8C942' },
-    { name: 'Housing', value: 1200, color: '#4A9F7E' },
-    { name: 'Transportation', value: 340, color: '#E76F51' },
-    { name: 'Entertainment', value: 180, color: '#2A9D8F' },
-    { name: 'Shopping', value: 320, color: '#F4A261' },
-    { name: 'Others', value: 100, color: '#264653' },
-  ];
-  
-  const savingsData = [
-    { month: 'Jan', amount: 1300 },
-    { month: 'Feb', amount: 600 },
-    { month: 'Mar', amount: 1200 },
-    { month: 'Apr', amount: 800 },
-    { month: 'May', amount: 1500 },
-    { month: 'Jun', amount: 1300 },
-  ];
-  
-  const incomeVsExpenseTrend = monthlyData.map(item => ({
-    month: item.month,
-    'Income Trend': item.income,
-    'Expense Trend': item.expenses,
-  }));
-  
-  const exportReports = () => {
-    toast({
-      title: "Exporting reports",
-      description: "Your reports are being prepared for download.",
+  // Update currency when it changes in localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'selectedCurrency') {
+        setCurrency(e.newValue || '₹');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Generate chart data from transactions
+  useEffect(() => {
+    if (!transactions || transactions.length === 0) return;
+
+    // Filter transactions based on selected time range
+    const now = new Date();
+    const filtered = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      const diffMonths = (now.getFullYear() - transactionDate.getFullYear()) * 12 + 
+                         (now.getMonth() - transactionDate.getMonth());
+      
+      switch(timeRange) {
+        case 'lastMonth': return diffMonths <= 1;
+        case 'last3Months': return diffMonths <= 3;
+        case 'last6Months': return diffMonths <= 6;
+        case 'thisYear': return transactionDate.getFullYear() === now.getFullYear();
+        case 'lastYear': return transactionDate.getFullYear() === now.getFullYear() - 1;
+        default: return true;
+      }
+    });
+
+    // Group by month for monthly data
+    const monthMap = new Map();
+    filtered.forEach(t => {
+      const date = new Date(t.date);
+      const monthYear = `${date.toLocaleString('default', { month: 'short' })}${date.getFullYear() !== now.getFullYear() ? ' ' + date.getFullYear().toString().slice(-2) : ''}`;
+      
+      if (!monthMap.has(monthYear)) {
+        monthMap.set(monthYear, { month: monthYear, income: 0, expenses: 0, savings: 0 });
+      }
+      
+      const entry = monthMap.get(monthYear);
+      const amount = parseFloat(String(t.amount));
+      
+      if (t.type === 'income') {
+        entry.income += amount;
+      } else {
+        entry.expenses += amount;
+      }
+      
+      entry.savings = entry.income - entry.expenses;
     });
     
-    setTimeout(() => {
-      toast({
-        title: "Export complete",
-        description: "Your reports have been downloaded successfully.",
-      });
-    }, 1500);
+    // Convert to array and sort by date
+    const sortedMonthly = Array.from(monthMap.values()).sort((a, b) => {
+      return new Date(a.month + ' 1, 2023').getTime() - new Date(b.month + ' 1, 2023').getTime();
+    });
+    setMonthlyData(sortedMonthly);
+    
+    // Calculate savings data
+    setSavingsData(sortedMonthly.map(item => ({ month: item.month, amount: item.savings })));
+
+    // Group by category for pie chart
+    const expensesByCategory = new Map();
+    filtered.filter(t => t.type === 'expense').forEach(t => {
+      if (!expensesByCategory.has(t.category)) {
+        expensesByCategory.set(t.category, { name: t.category, value: 0 });
+      }
+      expensesByCategory.get(t.category).value += parseFloat(String(t.amount));
+    });
+    
+    // Assign colors to categories
+    const colors = ['#F8C942', '#4A9F7E', '#E76F51', '#2A9D8F', '#F4A261', '#264653', '#9b87f5', '#023047', '#FB8500', '#6D6875'];
+    const categoriesWithColors = Array.from(expensesByCategory.values()).map((category, index) => ({
+      ...category,
+      color: colors[index % colors.length]
+    }));
+    
+    setCategoryData(categoriesWithColors);
+  }, [transactions, timeRange]);
+
+  const exportReports = () => {
+    const csvContent = [
+      // Header row
+      ['Month', 'Income', 'Expenses', 'Savings'].join(','),
+      // Data rows
+      ...monthlyData.map(item => 
+        [item.month, item.income, item.expenses, item.savings].join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `financial-report-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Reports exported",
+      description: "Your financial reports have been downloaded successfully.",
+    });
   };
   
   return (
@@ -235,7 +305,7 @@ const Reports: React.FC = () => {
           <CardContent className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={incomeVsExpenseTrend}
+                data={monthlyData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -248,7 +318,8 @@ const Reports: React.FC = () => {
                 <Legend />
                 <Line 
                   type="monotone" 
-                  dataKey="Income Trend" 
+                  dataKey="income" 
+                  name="Income"
                   stroke="#4A9F7E" 
                   strokeWidth={2}
                   dot={{ r: 4 }}
@@ -256,7 +327,8 @@ const Reports: React.FC = () => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="Expense Trend" 
+                  dataKey="expenses" 
+                  name="Expense"
                   stroke="#F97066" 
                   strokeWidth={2}
                   dot={{ r: 4 }}

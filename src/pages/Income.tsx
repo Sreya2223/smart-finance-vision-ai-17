@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,28 +15,17 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import RecentTransactions from '@/components/dashboard/transactions/RecentTransactions';
-import { addTransaction } from '@/integrations/supabase/client';
+import { useTransactions } from '@/contexts/TransactionContext';
 import { Transaction } from '@/types/transaction';
-
-type IncomeItem = {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  date: string;
-};
 
 const Income: React.FC = () => {
   const { toast } = useToast();
+  const { transactions, addNewTransaction } = useTransactions();
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     return localStorage.getItem('selectedCurrency') || '$';
   });
   
-  const [incomeItems, setIncomeItems] = useState<IncomeItem[]>([
-    { id: '1', title: 'Salary', amount: 3000, category: 'Employment', date: '2025-04-05' },
-    { id: '2', title: 'Freelance Work', amount: 500, category: 'Business', date: '2025-04-10' },
-    { id: '3', title: 'Dividends', amount: 200, category: 'Investments', date: '2025-04-15' },
-  ]);
+  const [incomeTransactions, setIncomeTransactions] = useState<Transaction[]>([]);
   
   const [newIncome, setNewIncome] = useState({
     title: '',
@@ -45,6 +35,17 @@ const Income: React.FC = () => {
   });
   
   const [isAdding, setIsAdding] = useState(false);
+  
+  // Filter income transactions whenever transactions list changes
+  useEffect(() => {
+    if (transactions && transactions.length > 0) {
+      const filtered = transactions
+        .filter(t => t.type === 'income')
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setIncomeTransactions(filtered);
+    }
+  }, [transactions]);
   
   useEffect(() => {
     const handleCurrencyChange = (e: StorageEvent) => {
@@ -60,12 +61,26 @@ const Income: React.FC = () => {
     };
   }, []);
   
-  const handleDelete = (id: string) => {
-    setIncomeItems(prev => prev.filter(item => item.id !== id));
-    toast({
-      title: "Income deleted",
-      description: "The income entry has been removed.",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      // Delete transaction logic will be handled by TransactionContext
+      const { deleteTransaction } = await import('@/integrations/supabase/client');
+      await deleteTransaction(id);
+      
+      // Update local state
+      setIncomeTransactions(prev => prev.filter(item => item.id !== id));
+      
+      toast({
+        title: "Income deleted",
+        description: "The income entry has been removed.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete income",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,23 +96,15 @@ const Income: React.FC = () => {
     }
     
     try {
-      await addTransaction({
+      await addNewTransaction({
         title: newIncome.title,
         amount: parseFloat(newIncome.amount),
         category: newIncome.category,
         date: newIncome.date,
-        type: 'income'
+        type: 'income',
+        payment_method: 'Other'
       });
       
-      const newItem: IncomeItem = {
-        id: Date.now().toString(),
-        title: newIncome.title,
-        amount: parseFloat(newIncome.amount),
-        category: newIncome.category,
-        date: newIncome.date,
-      };
-      
-      setIncomeItems(prev => [...prev, newItem]);
       setNewIncome({
         title: '',
         amount: '',
@@ -121,17 +128,39 @@ const Income: React.FC = () => {
   };
   
   const handleExport = () => {
-    toast({
-      title: "Export started",
-      description: "Your income data is being exported to Excel.",
-    });
-    
-    setTimeout(() => {
+    try {
+      // Convert income transactions to CSV
+      const headers = ['Title', 'Category', 'Date', 'Amount'];
+      const csvContent = [
+        headers.join(','),
+        ...incomeTransactions.map(t => 
+          [t.title, t.category, t.date, t.amount].join(',')
+        )
+      ].join('\n');
+      
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `income-data-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      link.click();
+      document.body.removeChild(link);
+      
       toast({
         title: "Export complete",
         description: "Your income data has been exported successfully.",
       });
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export income data. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -237,29 +266,29 @@ const Income: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
-          {incomeItems.map(item => (
-            <Card key={item.id} className="group hover:border-primary transition-colors">
-              <CardContent className="p-4 flex justify-between items-center">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-500">{item.category} • {item.date}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-lg font-semibold text-green-600">{selectedCurrency}{item.amount.toFixed(2)}</span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => handleDelete(item.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {incomeItems.length === 0 && (
+          {incomeTransactions.length > 0 ? (
+            incomeTransactions.map(item => (
+              <Card key={item.id} className="group hover:border-primary transition-colors">
+                <CardContent className="p-4 flex justify-between items-center">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900">{item.title}</h3>
+                    <p className="text-sm text-gray-500">{item.category} • {item.date}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-green-600">{selectedCurrency}{parseFloat(String(item.amount)).toFixed(2)}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(item.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
               <p className="text-gray-500">No income sources found. Add your first income!</p>
             </div>
