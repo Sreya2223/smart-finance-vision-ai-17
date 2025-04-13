@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, User, Mail, Lock } from 'lucide-react';
+import { Loader2, User, Mail, Lock, CheckCircle } from 'lucide-react';
 
 // Form validation schema
 const formSchema = z.object({
@@ -106,7 +106,7 @@ const SignupForm: React.FC = () => {
                     {...field}
                     type="text"
                     placeholder="John Doe"
-                    className="pl-10"
+                    className="pl-10 bg-background/50 backdrop-blur-sm border-input/80 focus:border-primary/70 transition-all duration-200"
                     disabled={isLoading}
                   />
                 </div>
@@ -129,7 +129,7 @@ const SignupForm: React.FC = () => {
                     {...field}
                     type="email"
                     placeholder="your.email@example.com"
-                    className="pl-10"
+                    className="pl-10 bg-background/50 backdrop-blur-sm border-input/80 focus:border-primary/70 transition-all duration-200"
                     disabled={isLoading}
                   />
                 </div>
@@ -152,7 +152,7 @@ const SignupForm: React.FC = () => {
                     {...field}
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-10 bg-background/50 backdrop-blur-sm border-input/80 focus:border-primary/70 transition-all duration-200"
                     disabled={isLoading}
                   />
                 </div>
@@ -175,7 +175,7 @@ const SignupForm: React.FC = () => {
                     {...field}
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-10 bg-background/50 backdrop-blur-sm border-input/80 focus:border-primary/70 transition-all duration-200"
                     disabled={isLoading}
                   />
                 </div>
@@ -187,7 +187,7 @@ const SignupForm: React.FC = () => {
         
         <Button 
           type="submit" 
-          className="w-full bg-primary hover:bg-primary-600 h-12 mt-6 text-base font-medium" 
+          className="w-full bg-primary hover:bg-primary/80 h-12 mt-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group" 
           disabled={isLoading}
         >
           {isLoading ? (
@@ -195,12 +195,19 @@ const SignupForm: React.FC = () => {
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Creating account...
             </>
-          ) : 'Create account'}
+          ) : (
+            <>
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                Create account <CheckCircle className="h-5 w-5 opacity-90" />
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-primary to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+            </>
+          )}
         </Button>
         
         <div className="text-center mt-6">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link to="/login" className="text-primary hover:underline font-medium">
+          <span className="text-muted-foreground">Already have an account? </span>
+          <Link to="/login" className="text-primary hover:underline font-medium transition-colors duration-200">
             Log in
           </Link>
         </div>

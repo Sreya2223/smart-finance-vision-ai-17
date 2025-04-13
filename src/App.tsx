@@ -19,7 +19,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import UserProfile from './pages/UserProfile';
 import { useAuth } from './contexts/AuthContext';
-import { useTheme } from '@/components/ui/theme-toggle';
+import { ThemeProvider } from '@/components/ui/theme-toggle';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TransactionProvider } from './contexts/TransactionContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -42,20 +42,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return <>{children}</>;
-};
-
-// Custom ThemeProvider wrapper component
-export const ThemeProvider: React.FC<{
-  children: React.ReactNode;
-  defaultTheme?: string;
-  storageKey?: string;
-}> = ({ children, defaultTheme = 'system', storageKey = 'vite-ui-theme' }) => {
-  return (
-    <div>
-      {children}
-      <Toaster />
-    </div>
-  );
 };
 
 const queryClient = new QueryClient();
@@ -87,6 +73,7 @@ function App() {
                 {/* Fallback route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              <Toaster />
             </TransactionProvider>
           </AuthProvider>
         </Router>
