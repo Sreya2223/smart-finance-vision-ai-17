@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   
-  // Get user information from metadata
   const userEmail = user?.email || '';
   const userName = user?.user_metadata?.full_name || '';
   const userAvatar = user?.user_metadata?.avatar_url || '';
@@ -33,7 +31,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
     confirmPassword: '',
   });
 
-  // Update profile data when user changes
   useEffect(() => {
     if (user) {
       setProfileData(prev => ({
@@ -60,7 +57,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
     try {
       let updates = {};
       
-      // Update name if provided
       if (profileData.name && profileData.name !== userName) {
         updates = {
           ...updates,
@@ -70,7 +66,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
         };
       }
       
-      // Update password if provided
       if (profileData.currentPassword && profileData.newPassword) {
         const { error } = await supabase.auth.updateUser({
           password: profileData.newPassword
@@ -78,7 +73,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
         
         if (error) throw error;
         
-        // Clear password fields
         setProfileData({
           ...profileData,
           currentPassword: '',
@@ -87,7 +81,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
         });
       }
       
-      // Update metadata if needed
       if (Object.keys(updates).length > 0) {
         const { error } = await supabase.auth.updateUser(updates);
         if (error) throw error;
@@ -113,7 +106,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Validate file type and size
     const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
     if (!validTypes.includes(file.type)) {
       toast({
@@ -124,7 +116,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
       return;
     }
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
         description: "Image size should be less than 5MB.",
@@ -140,28 +132,24 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ user }) => {
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
       
-      // Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('user-content')
         .upload(filePath, file);
       
       if (uploadError) throw uploadError;
       
-      // Get public URL for the uploaded image
       const { data } = supabase.storage
         .from('user-content')
         .getPublicUrl(filePath);
       
       const avatarUrl = data.publicUrl;
       
-      // Update user metadata with new avatar URL
       const { error: updateError } = await supabase.auth.updateUser({
         data: { avatar_url: avatarUrl }
       });
       
       if (updateError) throw updateError;
       
-      // Update local state
       setProfileData({
         ...profileData,
         avatar: avatarUrl
