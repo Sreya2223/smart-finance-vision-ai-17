@@ -8,4 +8,4 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Re-export v4 from uuid for direct usage
-export { uuidv4 as v4 };
+export const v4 = uuidv4;

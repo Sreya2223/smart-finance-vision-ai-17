@@ -30,10 +30,17 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session?.user);
+      const wasAuthenticated = isAuthenticated;
+      const isNowAuthenticated = !!session?.user;
       
-      if (event === 'SIGNED_IN') {
-        queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+      setIsAuthenticated(isNowAuthenticated);
+      
+      // If authentication state changed, refresh data
+      if (wasAuthenticated !== isNowAuthenticated) {
+        if (isNowAuthenticated) {
+          queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+          queryClient.invalidateQueries({ queryKey: ['recentTransactions'] });
+        }
       }
     });
 
@@ -45,7 +52,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       subscription.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, isAuthenticated]);
   
   const {
     data: transactions = [],
@@ -70,7 +77,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         throw err;
       }
     },
-    enabled: isAuthenticated // Only run query when authenticated
+    enabled: isAuthenticated, // Only run query when authenticated
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   // Calculate totals whenever transactions change
@@ -114,7 +124,9 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const refreshTransactions = async () => {
     await refetch();
     queryClient.invalidateQueries({ queryKey: ['allTransactions'] });
+    queryClient.invalidateQueries({ queryKey: ['recentTransactions'] });
     queryClient.invalidateQueries({ queryKey: ['budgetData'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
   };
 
   const addNewTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {

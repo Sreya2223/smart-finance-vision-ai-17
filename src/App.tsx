@@ -44,7 +44,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
