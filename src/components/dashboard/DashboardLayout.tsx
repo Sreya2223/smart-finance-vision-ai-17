@@ -21,29 +21,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       <div className={cn(
         "flex min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full",
       )}>
-        <div className="flex flex-1 overflow-hidden">
-          {/* Desktop sidebar */}
-          <div className="hidden md:flex md:w-64 md:flex-shrink-0">
-            <div className="fixed h-full">
-              <DashboardSidebar />
-            </div>
+        {/* Desktop sidebar */}
+        <div className="hidden md:flex md:w-64 md:flex-shrink-0">
+          <div className="fixed h-full">
+            <DashboardSidebar />
           </div>
+        </div>
 
-          {/* Mobile sidebar */}
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="p-0">
-              <DashboardSidebar />
-            </SheetContent>
-          </Sheet>
+        {/* Mobile sidebar */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0">
+            <DashboardSidebar />
+          </SheetContent>
+        </Sheet>
 
-          {/* Main content */}
-          <div className={cn("flex-1 flex flex-col overflow-hidden md:ml-64 w-full")}>
-            <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-            <main className="flex-1 overflow-auto p-4 md:p-6 bg-background dark:bg-slate-900 transition-colors duration-200">
-              {children}
-            </main>
-            <Footer />
-          </div>
+        {/* Main content */}
+        <div className={cn("flex-1 flex flex-col md:pl-0 w-full")}>
+          <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 overflow-auto p-4 md:p-6 bg-background dark:bg-slate-900 transition-colors duration-200">
+            {children}
+          </main>
+          <Footer />
         </div>
       </div>
     </SidebarProvider>

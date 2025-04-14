@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -85,7 +84,7 @@ const DashboardSidebar = () => {
       <div className="h-full px-3 py-4">
         <div className="flex items-center justify-between mb-6">
           <Link to="/dashboard" className="flex items-center">
-            <Logo showText={false} size="md" className="h-8 w-auto" />
+            <Logo size="md" className="h-8 w-auto" />
           </Link>
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
             {open ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}

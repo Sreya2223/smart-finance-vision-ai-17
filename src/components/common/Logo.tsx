@@ -29,7 +29,10 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className }) 
         className={cn(dimensions[size], "object-contain")}
       />
       {showText && (
-        <div className={`font-bold text-dark ${textSizes[size]} leading-none`}>
+        <div className={cn(
+          `font-bold leading-none font-['Poppins',_sans-serif] text-primary-500`,
+          textSizes[size]
+        )}>
           <div>Smart</div>
           <div>Pockets</div>
         </div>
