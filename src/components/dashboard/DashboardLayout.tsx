@@ -19,11 +19,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <SidebarProvider>
       <div className={cn(
-        "flex min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full flex-col",
+        "flex min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full",
       )}>
         <div className="flex flex-1 overflow-hidden">
           {/* Desktop sidebar */}
-          <div className="hidden md:block md:w-64 flex-shrink-0">
+          <div className="hidden md:flex md:w-64 md:flex-shrink-0">
             <div className="fixed h-full">
               <DashboardSidebar />
             </div>
@@ -37,7 +37,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </Sheet>
 
           {/* Main content */}
-          <div className={cn("flex-1 flex flex-col overflow-hidden md:ml-64")}>
+          <div className={cn("flex-1 flex flex-col overflow-hidden md:ml-64 w-full")}>
             <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
             <main className="flex-1 overflow-auto p-4 md:p-6 bg-background dark:bg-slate-900 transition-colors duration-200">
               {children}
