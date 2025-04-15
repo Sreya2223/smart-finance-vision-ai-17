@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,7 +85,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
 
       // Add transaction directly to the database
       const transactionData = {
-        type: 'expense',
+        type: 'expense' as 'income' | 'expense',
         title: scanResult.merchant,
         amount: scanResult.total,
         category: receiptCategory,
