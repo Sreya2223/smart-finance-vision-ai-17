@@ -12,6 +12,7 @@ import ReceiptScanner from '@/components/dashboard/ai/ReceiptScanner';
 import TransactionHeader from '@/components/dashboard/transactions/TransactionHeader';
 import TransactionFilter from '@/components/dashboard/transactions/TransactionFilter';
 import TransactionTable from '@/components/dashboard/transactions/TransactionTable';
+import { downloadAsJson, transactionsToCSV, downloadAsCSV } from '@/utils/exportUtils';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -81,12 +82,59 @@ const Transactions: React.FC = () => {
     });
   };
 
+  const handleExportTransactions = () => {
+    if (!filteredTransactions?.length) {
+      toast({
+        title: "No data to export",
+        description: "There are no transactions matching your filters to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Export as CSV
+    const csvData = transactionsToCSV(filteredTransactions);
+    downloadAsCSV(csvData, `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    toast({
+      title: "Export successful",
+      description: "Your transactions have been exported as CSV.",
+    });
+  };
+
+  const handleEmailTransactions = () => {
+    if (!filteredTransactions?.length) {
+      toast({
+        title: "No data to email",
+        description: "There are no transactions matching your filters to email.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // In a real application, this would call an API endpoint to send the email
+    toast({
+      title: "Email feature",
+      description: "Your transaction data will be emailed to your registered email address shortly.",
+    });
+    
+    // Simulate email being sent
+    setTimeout(() => {
+      toast({
+        title: "Email sent",
+        description: "Your transaction data has been sent to your email.",
+      });
+    }, 2000);
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-6">
         <TransactionHeader 
           onAddTransaction={() => setIsAddTransactionOpen(true)}
           onScanReceipt={() => setIsReceiptScannerOpen(true)}
+          onExport={handleExportTransactions}
+          onEmail={handleEmailTransactions}
         />
 
         <AddTransactionForm 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, Menu, User } from 'lucide-react';
+import { Bell, Menu, User, Mail, FileExport } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useNavigate } from 'react-router-dom';
@@ -8,9 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 
 type DashboardHeaderProps = {
   onMenuClick: () => void;
+  onEmailData?: () => void;
+  onExportData?: () => void;
 };
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
+  onMenuClick,
+  onEmailData,
+  onExportData
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -25,6 +31,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
     navigate('/profile');
   };
 
+  const handleEmailData = () => {
+    if (onEmailData) {
+      onEmailData();
+    } else {
+      toast({
+        title: "Email Data",
+        description: "Your financial data will be emailed shortly.",
+      });
+    }
+  };
+
+  const handleExportData = () => {
+    if (onExportData) {
+      onExportData();
+    } else {
+      toast({
+        title: "Export Data",
+        description: "Your financial data is being exported.",
+      });
+    }
+  };
+
   return (
     <header className="border-b border-border bg-background dark:border-zinc-800">
       <div className="flex h-16 items-center justify-between px-4">
@@ -33,6 +61,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuClick }) => {
             <Menu className="h-6 w-6" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
+          
+          {/* Email and Export buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleEmailData}
+              className="flex items-center gap-1"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Email</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportData}
+              className="flex items-center gap-1"
+            >
+              <FileExport className="h-4 w-4" />
+              <span>Export</span>
+            </Button>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />

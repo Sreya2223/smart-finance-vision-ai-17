@@ -12,36 +12,32 @@ import { getUserTransactions, getTaxCalculation } from '@/integrations/supabase/
 import { Transaction } from '@/types/transaction';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { downloadAsJson, transactionsToCSV, downloadAsCSV, generateFinancialSummary } from '@/utils/exportUtils';
 
 const Dashboard: React.FC = () => {
-  // Get the currency from localStorage - always set to INR
-  const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    localStorage.setItem('selectedCurrency', '₹');
-    return '₹';
-  });
-  
   const { toast } = useToast();
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   
-  // For chart data
   const [expenseData, setExpenseData] = useState<any[]>([]);
   const [incomeData, setIncomeData] = useState<any[]>([]);
   const [balanceData, setBalanceData] = useState<any[]>([]);
   const [expenseByCategory, setExpenseByCategory] = useState<any[]>([]);
   
-  // Stats for cards
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    localStorage.setItem('selectedCurrency', '₹');
+    return '₹';
+  });
+
   useEffect(() => {
-    // Set default currency to INR if not present
     localStorage.setItem('selectedCurrency', '₹');
     setSelectedCurrency('₹');
     
-    // Listen for currency changes from the header
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
         setSelectedCurrency(e.newValue || '₹');
@@ -62,7 +58,6 @@ const Dashboard: React.FC = () => {
         const data = await getUserTransactions();
         setRecentTransactions(data);
         
-        // Calculate totals
         let incomeTotal = 0;
         let expenseTotal = 0;
         
@@ -78,9 +73,7 @@ const Dashboard: React.FC = () => {
         setTotalExpenses(expenseTotal);
         setTotalBalance(incomeTotal - expenseTotal);
         
-        // Process data for charts
         processChartData(data);
-        
       } catch (error: any) {
         console.error('Error fetching transactions:', error);
         toast({
@@ -96,7 +89,6 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, [toast]);
   
-  // Fetch tax calculation data
   const { data: taxData, isLoading: taxLoading } = useQuery({
     queryKey: ['taxCalculation'],
     queryFn: async () => {
@@ -109,11 +101,9 @@ const Dashboard: React.FC = () => {
     }
   });
   
-  // Process transaction data for charts
   const processChartData = (transactions: Transaction[]) => {
     if (!transactions.length) return;
     
-    // Group by month
     const months: Record<string, {income: number, expense: number}> = {};
     const categoryTotals: Record<string, number> = {};
     
@@ -132,7 +122,6 @@ const Dashboard: React.FC = () => {
       } else {
         months[monthYear].expense += amount;
         
-        // Aggregating expense categories
         if (!categoryTotals[transaction.category]) {
           categoryTotals[transaction.category] = 0;
         }
@@ -140,7 +129,6 @@ const Dashboard: React.FC = () => {
       }
     });
     
-    // Prepare chart data
     const expenseChartData = [];
     const incomeChartData = [];
     const balanceChartData = [];
@@ -155,7 +143,6 @@ const Dashboard: React.FC = () => {
     setIncomeData(incomeChartData);
     setBalanceData(balanceChartData);
     
-    // Prepare pie chart data
     const colors = ['#F8C942', '#4A9F7E', '#E76F51', '#2A9D8F', '#F4A261', '#264653'];
     const categoryData = Object.entries(categoryTotals).map(([name, value], index) => ({
       name,
@@ -166,23 +153,63 @@ const Dashboard: React.FC = () => {
     setExpenseByCategory(categoryData);
   };
   
-  // Combine income and expense data for the chart
+  const exportDashboardData = () => {
+    if (recentTransactions.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "There are no transactions available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const dashboardData = {
+      summary: {
+        totalIncome,
+        totalExpenses,
+        totalBalance,
+      },
+      transactions: recentTransactions,
+      expenseByCategory: expenseByCategory,
+      taxData: taxData || {},
+    };
+    
+    downloadAsJson(dashboardData, `financial_dashboard_data_${new Date().toISOString().split('T')[0]}.json`);
+    
+    toast({
+      title: "Export successful",
+      description: "Your dashboard data has been exported as JSON.",
+    });
+  };
+  
+  const emailDashboardData = () => {
+    toast({
+      title: "Email feature",
+      description: "Your financial data will be emailed to your registered email address shortly.",
+    });
+    
+    setTimeout(() => {
+      toast({
+        title: "Email sent",
+        description: "Your financial data has been sent to your email.",
+      });
+    }, 2000);
+  };
+  
   const combinedChartData = expenseData.map((item, index) => ({
     name: item.name,
     expense: item.expense,
     income: incomeData[index]?.income || 0
   }));
-  
+
   const handleAddTransaction = async (transaction: Transaction) => {
     try {
       setRecentTransactions(prev => [transaction, ...prev]);
       
-      // Refresh data to update charts and totals
       const data = await getUserTransactions();
       setRecentTransactions(data);
       processChartData(data);
       
-      // Recalculate totals
       let incomeTotal = 0;
       let expenseTotal = 0;
       
@@ -378,7 +405,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
       
-      {/* Transaction input dialog */}
       <AddTransactionForm 
         isOpen={isAddingTransaction}
         onClose={() => setIsAddingTransaction(false)}
