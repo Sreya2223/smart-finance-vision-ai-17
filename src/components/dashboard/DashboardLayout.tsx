@@ -22,7 +22,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         "flex min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 w-full",
       )}>
         {/* Desktop sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-shrink-0">
+        <div className="hidden md:block md:w-64 md:flex-shrink-0">
           <div className="fixed h-full w-64">
             <DashboardSidebar />
           </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -96,23 +97,27 @@ const DashboardSidebar = () => {
             <div key={index} className="space-y-1">
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 px-3">{section.label}</h3>
               <ul className="space-y-1">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleNavigation(link.href)}
-                      className={cn(
-                        "flex w-full items-center justify-start space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium",
-                        location.pathname === link.href 
-                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
-                          : 'text-gray-700 dark:text-gray-200',
-                      )}
-                    >
-                      {link.icon}
-                      <span>{link.name}</span>
-                    </Button>
-                  </li>
-                ))}
+                {section.links.map((link) => {
+                  const isActive = location.pathname === link.href;
+                  
+                  return (
+                    <li key={link.name}>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleNavigation(link.href)}
+                        className={cn(
+                          "flex w-full items-center justify-start space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium",
+                          isActive 
+                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                            : 'text-gray-700 dark:text-gray-200',
+                        )}
+                      >
+                        {link.icon}
+                        <span>{link.name}</span>
+                      </Button>
+                    </li>
+                  );
+                })}
               </ul>
               {index < navigation.length - 1 && <Separator className="my-2" />}
             </div>
