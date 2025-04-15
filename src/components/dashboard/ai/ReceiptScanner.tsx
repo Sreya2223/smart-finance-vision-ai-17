@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Camera, Upload } from 'lucide-react';
 import ScanTabs from './receipt/ScanTabs';
 import ScanResult from './receipt/ScanResult';
 import { useScanReceipt } from './receipt/useScanReceipt';

@@ -43,7 +43,12 @@ const ScanTabs: React.FC<ScanTabsProps> = ({
       <TabsContent value="upload" className="mt-4">
         <UploadTab 
           isScanning={isScanning}
-          handleFileUpload={handleFileUpload}
+          handleFileUpload={(e) => {
+            // Extract the file from the event and pass it to the handler
+            if (e.target.files && e.target.files[0]) {
+              handleFileUpload(e.target.files[0]);
+            }
+          }}
         />
       </TabsContent>
     </Tabs>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/contexts/TransactionContext';
@@ -21,11 +20,8 @@ export const useScanReceipt = (onClose?: () => void) => {
   const { refreshTransactions } = useTransactions();
   const [selectedCurrency] = useState('₹'); // Always use INR
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      simulateScan(file);
-    }
+  const handleFileUpload = (file: File) => {
+    simulateScan(file);
   };
 
   const handleCameraCapture = () => {
