@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -136,7 +137,7 @@ const Transactions: React.FC = () => {
             />
           </div>
           <div className="w-full md:w-48">
-            <Select value={filterType || ""} onValueChange={(value) => setFilterType(value || null)}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? null : value)}>
               <SelectTrigger>
                 <div className="flex items-center">
                   <Filter className="h-4 w-4 mr-2" />
@@ -144,7 +145,7 @@ const Transactions: React.FC = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>

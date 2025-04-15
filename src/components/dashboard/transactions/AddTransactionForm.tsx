@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,14 +225,15 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="payment_method" className="text-slate-700">Payment Method (Optional)</Label>
             <Select 
-              value={formData.payment_method}
-              onValueChange={value => setFormData({...formData, payment_method: value})}
+              value={formData.payment_method || "none"}
+              onValueChange={value => setFormData({...formData, payment_method: value === "none" ? "" : value})}
               disabled={isSubmitting}
             >
               <SelectTrigger className="border-slate-300 bg-white">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Select a method</SelectItem>
                 <SelectItem value="Cash">Cash</SelectItem>
                 <SelectItem value="Credit Card">Credit Card</SelectItem>
                 <SelectItem value="Debit Card">Debit Card</SelectItem>

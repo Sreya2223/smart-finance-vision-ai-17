@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -218,13 +219,14 @@ const Income: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select 
-                    value={newIncome.category}
-                    onValueChange={value => setNewIncome({...newIncome, category: value})}
+                    value={newIncome.category || "select-category"}
+                    onValueChange={value => setNewIncome({...newIncome, category: value === "select-category" ? "" : value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="select-category">Select a category</SelectItem>
                       <SelectItem value="Employment">Employment</SelectItem>
                       <SelectItem value="Business">Business</SelectItem>
                       <SelectItem value="Investments">Investments</SelectItem>

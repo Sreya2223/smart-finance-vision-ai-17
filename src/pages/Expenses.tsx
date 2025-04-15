@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -202,13 +203,14 @@ const Expenses: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select 
-                    value={newExpense.category}
-                    onValueChange={value => setNewExpense({...newExpense, category: value})}
+                    value={newExpense.category || "select-category"}
+                    onValueChange={value => setNewExpense({...newExpense, category: value === "select-category" ? "" : value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="select-category">Select a category</SelectItem>
                       <SelectItem value="Food & Drinks">Food & Drinks</SelectItem>
                       <SelectItem value="Entertainment">Entertainment</SelectItem>
                       <SelectItem value="Transportation">Transportation</SelectItem>
@@ -237,13 +239,14 @@ const Expenses: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod">Payment Method</Label>
                   <Select
-                    value={newExpense.paymentMethod}
-                    onValueChange={value => setNewExpense({...newExpense, paymentMethod: value})}
+                    value={newExpense.paymentMethod || "select-method"}
+                    onValueChange={value => setNewExpense({...newExpense, paymentMethod: value === "select-method" ? "" : value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select payment method" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="select-method">Select a method</SelectItem>
                       <SelectItem value="Cash">Cash</SelectItem>
                       <SelectItem value="Credit Card">Credit Card</SelectItem>
                       <SelectItem value="Debit Card">Debit Card</SelectItem>
