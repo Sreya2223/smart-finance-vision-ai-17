@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search, Upload, Camera } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search, Upload, Camera, IndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
@@ -21,7 +20,8 @@ const Transactions: React.FC = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('selectedCurrency') || '₹';
+    localStorage.setItem('selectedCurrency', '₹');
+    return '₹';
   });
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
@@ -144,7 +144,7 @@ const Transactions: React.FC = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="">All Types</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>

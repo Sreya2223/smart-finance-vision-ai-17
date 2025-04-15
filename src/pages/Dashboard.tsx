@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/cards/StatsCard';
@@ -7,7 +6,7 @@ import TransactionList from '@/components/dashboard/transactions/TransactionList
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 import BudgetProgressCard from '@/components/dashboard/budget/BudgetProgressCard';
 import TaxSummaryCard from '@/components/dashboard/cards/TaxSummaryCard';
-import { Wallet, CreditCard, DollarSign, Utensils, ShoppingBag, Home, Train, Gift, Loader2 } from 'lucide-react';
+import { IndianRupee, CreditCard, Utensils, ShoppingBag, Home, Train, Gift, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { getUserTransactions, getTaxCalculation } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/transaction';
@@ -15,9 +14,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 
 const Dashboard: React.FC = () => {
-  // Get the currency from localStorage
+  // Get the currency from localStorage - always set to INR
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('selectedCurrency') || '₹';
+    localStorage.setItem('selectedCurrency', '₹');
+    return '₹';
   });
   
   const { toast } = useToast();
@@ -38,10 +38,8 @@ const Dashboard: React.FC = () => {
   
   useEffect(() => {
     // Set default currency to INR if not present
-    if (!localStorage.getItem('selectedCurrency')) {
-      localStorage.setItem('selectedCurrency', '₹');
-      setSelectedCurrency('₹');
-    }
+    localStorage.setItem('selectedCurrency', '₹');
+    setSelectedCurrency('₹');
     
     // Listen for currency changes from the header
     const handleCurrencyChange = (e: StorageEvent) => {
@@ -209,36 +207,36 @@ const Dashboard: React.FC = () => {
     {
       id: '1',
       name: 'Food & Dining',
-      budgeted: 600,
-      spent: 480,
+      budgeted: 6000,
+      spent: 4800,
       icon: <Utensils className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '2',
       name: 'Shopping',
-      budgeted: 400,
-      spent: 320,
+      budgeted: 4000,
+      spent: 3200,
       icon: <ShoppingBag className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '3',
       name: 'Housing',
-      budgeted: 1200,
-      spent: 1200,
+      budgeted: 12000,
+      spent: 12000,
       icon: <Home className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '4',
       name: 'Transportation',
-      budgeted: 300,
-      spent: 340,
+      budgeted: 3000,
+      spent: 3400,
       icon: <Train className="h-4 w-4 text-indigo-600" />,
     },
     {
       id: '5',
       name: 'Entertainment',
-      budgeted: 200,
-      spent: 180,
+      budgeted: 2000,
+      spent: 1800,
       icon: <Gift className="h-4 w-4 text-indigo-600" />,
     },
   ];
@@ -267,14 +265,14 @@ const Dashboard: React.FC = () => {
         <StatsCard
           title="Total Balance"
           value={`${selectedCurrency}${totalBalance.toFixed(2)}`}
-          icon={<DollarSign className="h-5 w-5 text-indigo-600" />}
+          icon={<IndianRupee className="h-5 w-5 text-indigo-600" />}
           iconBg="bg-indigo-100"
         />
         <StatsCard
           title="Total Income"
           value={`${selectedCurrency}${totalIncome.toFixed(2)}`}
           change={8}
-          icon={<Wallet className="h-5 w-5 text-green-600" />}
+          icon={<IndianRupee className="h-5 w-5 text-green-600" />}
           iconBg="bg-green-100"
           variant="income"
         />

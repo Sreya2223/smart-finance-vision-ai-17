@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, FileDown, DollarSign, Upload } from 'lucide-react';
+import { Plus, Trash2, FileDown, IndianRupee, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -31,7 +31,8 @@ const Expenses: React.FC = () => {
   const { toast } = useToast();
   const { transactions, addNewTransaction, refreshTransactions, isLoading } = useTransactions();
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('selectedCurrency') || '$';
+    localStorage.setItem('selectedCurrency', '₹');
+    return '₹';
   });
   
   const expenseItems = transactions.filter(transaction => transaction.type === 'expense');
@@ -50,7 +51,7 @@ const Expenses: React.FC = () => {
   useEffect(() => {
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
-        setSelectedCurrency(e.newValue || '$');
+        setSelectedCurrency(e.newValue || '₹');
       }
     };
     
@@ -184,7 +185,7 @@ const Expenses: React.FC = () => {
                   <Label htmlFor="amount">Amount ({selectedCurrency})</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-500">
-                      <DollarSign className="h-4 w-4" />
+                      <IndianRupee className="h-4 w-4" />
                     </span>
                     <Input 
                       id="amount" 

@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, Upload, Check, LoaderCircle } from 'lucide-react';
+import { Camera, Upload, Check, LoaderCircle, IndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/contexts/TransactionContext';
 import { Badge } from '@/components/ui/badge';
+import { addTransaction } from '@/integrations/supabase/client';
 
 interface ReceiptScannerProps {
   onClose?: () => void;
@@ -27,6 +28,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
   }>(null);
   const { toast } = useToast();
   const { addNewTransaction, refreshTransactions } = useTransactions();
+  const [selectedCurrency] = useState('₹'); // Always use INR
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,20 +50,20 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
     setTimeout(() => {
       setIsScanning(false);
       
-      // Mock result
+      // Mock result with more Indian-specific data
       setScanResult({
         merchant: "Grocery Store",
         date: new Date().toLocaleDateString(),
-        total: 78.95,
+        total: 1299.95,
         items: [
-          { name: "Milk", price: 3.99 },
-          { name: "Bread", price: 4.50 },
-          { name: "Eggs", price: 5.99 },
-          { name: "Vegetables", price: 12.50 },
-          { name: "Chicken", price: 15.99 },
-          { name: "Pasta", price: 2.99 },
-          { name: "Snacks", price: 8.99 },
-          { name: "Beverages", price: 24.00 },
+          { name: "Basmati Rice", price: 299.99 },
+          { name: "Atta Flour", price: 145.50 },
+          { name: "Paneer", price: 125.99 },
+          { name: "Fresh Vegetables", price: 220.50 },
+          { name: "Spices", price: 159.99 },
+          { name: "Cooking Oil", price: 199.99 },
+          { name: "Milk & Dairy", price: 149.99 },
+          { name: "Snacks", price: 98.00 },
         ]
       });
       
@@ -82,17 +84,20 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
         ? `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
         : new Date().toISOString().split('T')[0];
 
-      // Add as a transaction using the context
-      await addNewTransaction({
+      // Add transaction directly to the database
+      const transactionData = {
         type: 'expense',
         title: scanResult.merchant,
         amount: scanResult.total,
         category: receiptCategory,
         date: formattedDate,
         payment_method: paymentMethod,
-      });
+      };
+
+      // Save to database
+      const savedTransaction = await addTransaction(transactionData);
       
-      // This will trigger the real-time update across all pages
+      // Refresh transactions
       await refreshTransactions();
       
       toast({
@@ -198,7 +203,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Groceries">Groceries</SelectItem>
-                    <SelectItem value="Dining">Dining</SelectItem>
+                    <SelectItem value="Food & Drinks">Food & Drinks</SelectItem>
                     <SelectItem value="Transportation">Transportation</SelectItem>
                     <SelectItem value="Shopping">Shopping</SelectItem>
                     <SelectItem value="Entertainment">Entertainment</SelectItem>
@@ -240,7 +245,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
                     {scanResult.items.map((item, index) => (
                       <tr key={index} className="border-b last:border-0">
                         <td className="p-2">{item.name}</td>
-                        <td className="text-right p-2">${item.price.toFixed(2)}</td>
+                        <td className="text-right p-2">{selectedCurrency}{item.price.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -250,7 +255,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ onClose }) => {
             
             <div className="flex justify-between pt-4 border-t">
               <span className="font-bold">Total</span>
-              <span className="font-bold">${scanResult.total.toFixed(2)}</span>
+              <span className="font-bold">{selectedCurrency}{scanResult.total.toFixed(2)}</span>
             </div>
             
             <div className="flex justify-end space-x-2 pt-4">

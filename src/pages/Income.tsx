@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, FileDown, DollarSign } from 'lucide-react';
+import { Plus, Trash2, FileDown, IndianRupee } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -22,7 +21,8 @@ const Income: React.FC = () => {
   const { toast } = useToast();
   const { transactions, addNewTransaction } = useTransactions();
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('selectedCurrency') || '$';
+    localStorage.setItem('selectedCurrency', '₹');
+    return '₹';
   });
   
   const [incomeTransactions, setIncomeTransactions] = useState<Transaction[]>([]);
@@ -36,7 +36,6 @@ const Income: React.FC = () => {
   
   const [isAdding, setIsAdding] = useState(false);
   
-  // Filter income transactions whenever transactions list changes
   useEffect(() => {
     if (transactions && transactions.length > 0) {
       const filtered = transactions
@@ -50,7 +49,7 @@ const Income: React.FC = () => {
   useEffect(() => {
     const handleCurrencyChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
-        setSelectedCurrency(e.newValue || '$');
+        setSelectedCurrency(e.newValue || '₹');
       }
     };
     
@@ -63,11 +62,9 @@ const Income: React.FC = () => {
   
   const handleDelete = async (id: string) => {
     try {
-      // Delete transaction logic will be handled by TransactionContext
       const { deleteTransaction } = await import('@/integrations/supabase/client');
       await deleteTransaction(id);
       
-      // Update local state
       setIncomeTransactions(prev => prev.filter(item => item.id !== id));
       
       toast({
@@ -129,7 +126,6 @@ const Income: React.FC = () => {
   
   const handleExport = () => {
     try {
-      // Convert income transactions to CSV
       const headers = ['Title', 'Category', 'Date', 'Amount'];
       const csvContent = [
         headers.join(','),
@@ -138,7 +134,6 @@ const Income: React.FC = () => {
         )
       ].join('\n');
       
-      // Create and trigger download
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -206,7 +201,7 @@ const Income: React.FC = () => {
                   <Label htmlFor="amount">Amount ({selectedCurrency})</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-500">
-                      <DollarSign className="h-4 w-4" />
+                      <IndianRupee className="h-4 w-4" />
                     </span>
                     <Input 
                       id="amount" 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownLeft, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Loader2, IndianRupee } from 'lucide-react';
 import {
   Card,
   CardContent,

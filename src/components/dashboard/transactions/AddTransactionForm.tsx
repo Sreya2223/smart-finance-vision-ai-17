@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { DollarSign, Loader2 } from 'lucide-react';
+import { Loader2, IndianRupee } from 'lucide-react';
 import { addTransaction } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/transaction';
 
@@ -86,7 +85,6 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
         payment_method: formData.payment_method || undefined,
       };
       
-      // Save transaction to Supabase
       const newTransaction = await addTransaction(transactionData);
       
       onAddTransaction(newTransaction);
@@ -96,7 +94,6 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
         description: `${formData.type === 'income' ? 'Income' : 'Expense'} added successfully`,
       });
       
-      // Reset form
       setFormData({
         title: '',
         amount: '',
@@ -188,7 +185,24 @@ const AddTransactionForm: React.FC<AddTransactionFormProps> = ({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {(formData.type === 'income' ? incomeCategories : expenseCategories).map(category => (
+                {(formData.type === 'income' ? [
+                  'Salary',
+                  'Business',
+                  'Investments',
+                  'Freelance',
+                  'Gifts',
+                  'Other'
+                ] : [
+                  'Food & Drinks',
+                  'Transportation',
+                  'Entertainment',
+                  'Shopping',
+                  'Housing',
+                  'Utilities',
+                  'Health',
+                  'Education',
+                  'Other'
+                ]).map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
               </SelectContent>
