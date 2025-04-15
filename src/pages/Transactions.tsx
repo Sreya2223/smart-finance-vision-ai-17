@@ -1,19 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpRight, ArrowDownLeft, Download, Filter, Plus, Search, Upload, Camera, IndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AddTransactionForm from '@/components/dashboard/transactions/AddTransactionForm';
 import { getUserTransactions } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/transaction';
 import ReceiptScanner from '@/components/dashboard/ai/ReceiptScanner';
+import TransactionHeader from '@/components/dashboard/transactions/TransactionHeader';
+import TransactionFilter from '@/components/dashboard/transactions/TransactionFilter';
+import TransactionTable from '@/components/dashboard/transactions/TransactionTable';
 
 const Transactions: React.FC = () => {
   const { toast } = useToast();
@@ -26,6 +24,7 @@ const Transactions: React.FC = () => {
   });
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('all');
 
   const { data: transactions, isLoading, error } = useQuery({
     queryKey: ['allTransactions'],
@@ -54,10 +53,14 @@ const Transactions: React.FC = () => {
       ? transaction.type === filterType
       : true;
     
-    return matchesSearch && matchesType;
+    const matchesTab = activeTab === 'all' 
+      ? true 
+      : transaction.type === activeTab;
+    
+    return matchesSearch && matchesType && matchesTab;
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'selectedCurrency') {
         setSelectedCurrency(e.newValue || '₹');
@@ -81,26 +84,10 @@ const Transactions: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Transactions</h1>
-            <p className="text-muted-foreground">View and manage all your financial transactions</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsReceiptScannerOpen(true)}>
-              <Camera className="h-4 w-4 mr-2" />
-              Scan Receipt
-            </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button onClick={() => setIsAddTransactionOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Transaction
-            </Button>
-          </div>
-        </div>
+        <TransactionHeader 
+          onAddTransaction={() => setIsAddTransactionOpen(true)}
+          onScanReceipt={() => setIsReceiptScannerOpen(true)}
+        />
 
         <AddTransactionForm 
           isOpen={isAddTransactionOpen}
@@ -111,49 +98,20 @@ const Transactions: React.FC = () => {
 
         {isReceiptScannerOpen && (
           <Card className="mb-6">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Scan Receipt</CardTitle>
-                <CardDescription>Use AI to extract data from your receipt</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsReceiptScannerOpen(false)}>
-                ×
-              </Button>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <ReceiptScanner onClose={() => setIsReceiptScannerOpen(false)} />
             </CardContent>
           </Card>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search transactions..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="w-full md:w-48">
-            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? null : value)}>
-              <SelectTrigger>
-                <div className="flex items-center">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="All Types" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <TransactionFilter 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filterType={filterType}
+          setFilterType={setFilterType}
+        />
 
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full md:w-auto">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="income">Income</TabsTrigger>
@@ -161,72 +119,14 @@ const Transactions: React.FC = () => {
           </TabsList>
           
           <Card className="mt-4">
-            {isLoading ? (
-              <CardContent className="flex justify-center items-center py-12">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-              </CardContent>
-            ) : error ? (
-              <CardContent className="text-center py-6 text-destructive">
-                {(error as Error).message || 'Failed to load transactions'}
-              </CardContent>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTransactions && filteredTransactions.length > 0 ? (
-                      filteredTransactions.map((transaction) => (
-                        <TableRow key={transaction.id} className="hover:bg-muted/50 transition-colors">
-                          <TableCell>
-                            <div className="flex items-center">
-                              <div className={`p-2 rounded-full ${
-                                transaction.type === 'income' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
-                              }`}>
-                                {transaction.type === 'income' ? (
-                                  <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                ) : (
-                                  <ArrowDownLeft className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{transaction.title}</div>
-                              {transaction.payment_method && (
-                                <div className="text-xs text-muted-foreground">{transaction.payment_method}</div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{transaction.category}</TableCell>
-                          <TableCell>{transaction.date}</TableCell>
-                          <TableCell className="text-right">
-                            <span className={transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                              {transaction.type === 'income' ? '' : '- '}
-                              {selectedCurrency}{parseFloat(String(transaction.amount)).toFixed(2)}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                          {searchQuery || filterType ? 'No matching transactions found' : 'No transactions to display'}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+            <CardContent className="p-0">
+              <TransactionTable 
+                transactions={filteredTransactions || []}
+                isLoading={isLoading}
+                error={error}
+                selectedCurrency={selectedCurrency}
+              />
+            </CardContent>
           </Card>
         </Tabs>
       </div>
